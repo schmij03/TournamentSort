@@ -163,6 +163,12 @@ def main():
         result.append(entry)
         time.sleep(2.5)
 
+    # Bilder von Accounts, die nicht mehr in der Liste stehen, entfernen
+    keep = {pathlib.Path(e["img"]).name for e in result if e.get("img")}
+    for f in IMG_DIR.glob("*.jpg"):
+        if f.name not in keep:
+            f.unlink()
+
     OUT.write_text(json.dumps({"updated": today, "accounts": result}, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"\n{ok} von {len(result)} Accounts aktualisiert.")
     if failed:

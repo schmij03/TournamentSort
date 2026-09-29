@@ -1,57 +1,70 @@
-# Accounts, die die GitHub Action automatisch aktualisiert.
-# Format: plattform handle   (plattform = instagram oder tiktok)
-# Zeilen mit # werden ignoriert.
+# Accounts, die die GitHub Action automatisch aktualisiert (jeden Montag).
+# Format: plattform handle   (plattform = tiktok oder instagram)
+# Instagram blockiert den automatischen Abruf zurzeit, deshalb TikTok.
+# Zeilen mit # werden ignoriert. Accounts, die nicht gefunden werden, erscheinen nicht auf der Seite.
 
+tiktok sek.ds
 instagram sek.ds
 
-instagram cristiano
-instagram leomessi
-instagram selenagomez
-instagram kyliejenner
-instagram arianagrande
-instagram therock
-instagram kimkardashian
-instagram taylorswift
-instagram billieeilish
-instagram neymarjr
-instagram k.mbappe
-instagram erling
-instagram lamineyamal
-instagram judebellingham
-instagram zendaya
-instagram tomholland2013
-instagram jennaortega
-instagram milliebobbybrown
-instagram sabrinacarpenter
-instagram oliviarodrigo
-instagram badbunnypr
-instagram champagnepapi
-instagram lalalalisa_m
-instagram jennierubyjane
-instagram nike
-instagram realmadrid
-instagram fcbarcelona
-instagram natgeo
-instagram shirindavid
-instagram apache_207
-instagram pamela_rf
-instagram rogerfederer
-
+# Stars & Musik
 tiktok khaby.lame
 tiktok charlidamelio
 tiktok mrbeast
 tiktok bellapoarch
 tiktok addisonre
 tiktok zachking
-tiktok tiktok
+tiktok willsmith
+tiktok therock
+tiktok selenagomez
+tiktok kyliejenner
+tiktok billieeilish
+tiktok taylorswift
+tiktok arianagrande
+tiktok sabrinacarpenter
+tiktok livbedumb
+tiktok jasonderulo
+tiktok lorengray
+tiktok domelipa
+tiktok dixiedamelio
+tiktok noahbeck
+tiktok brentrivera
+tiktok jamescharles
+tiktok avani
+tiktok babyariel
+tiktok kimberly.loaiza
 tiktok spencerx
 tiktok bayashi.tiktok
 tiktok cznburak
-tiktok younes.zarou
+tiktok bp_tiktok
+tiktok bts_official_bighit
+tiktok ishowspeed
+tiktok kaicenat
+
+# Sport
+tiktok cristiano
+tiktok realmadrid
+tiktok fcbarcelona
+tiktok psg
+tiktok championsleague
+tiktok nba
+tiktok espn
+tiktok dudeperfect
+
+# Marken & Medien
+tiktok tiktok
+tiktok netflix
+tiktok disney
+tiktok tagesschau
+
+# Deutschsprachig
 tiktok twenty4tim
 tiktok julienbam
 tiktok dagibee
-tiktok lorengray
-tiktok domelipa
-tiktok willsmith
-tiktok jasonderulo
+tiktok younes.zarou
+tiktok montanablack
+tiktok papaplatte
+tiktok shirindavid
+tiktok lisaandlena
+tiktok skiaggu
+tiktok knossi
+tiktok rewi
