@@ -231,7 +231,7 @@
    "name": "",
    "followers": null,
    "posts": null,
-   "img": null
+   "img": "img/accounts/instagram_natgeo.jpg"
   },
   {
    "platform": "instagram",
@@ -269,7 +269,7 @@
    "platform": "tiktok",
    "handle": "khaby.lame",
    "name": "Khabane lame",
-   "followers": 162969347,
+   "followers": 162967784,
    "posts": 1356,
    "img": "img/accounts/tiktok_khaby.lame.jpg",
    "updated": "2026-09-29"
@@ -278,7 +278,7 @@
    "platform": "tiktok",
    "handle": "charlidamelio",
    "name": "charli d’amelio",
-   "followers": 160310573,
+   "followers": 160309901,
    "posts": 3277,
    "img": "img/accounts/tiktok_charlidamelio.jpg",
    "updated": "2026-09-29"
@@ -287,7 +287,7 @@
    "platform": "tiktok",
    "handle": "mrbeast",
    "name": "MrBeast",
-   "followers": 142406903,
+   "followers": 142397107,
    "posts": 477,
    "img": "img/accounts/tiktok_mrbeast.jpg",
    "updated": "2026-09-29"
@@ -296,7 +296,7 @@
    "platform": "tiktok",
    "handle": "bellapoarch",
    "name": "Bella Poarch",
-   "followers": 91611701,
+   "followers": 91610829,
    "posts": 139,
    "img": "img/accounts/tiktok_bellapoarch.jpg",
    "updated": "2026-09-29"
@@ -305,7 +305,7 @@
    "platform": "tiktok",
    "handle": "addisonre",
    "name": "Addison Rae",
-   "followers": 87722537,
+   "followers": 87724975,
    "posts": 407,
    "img": "img/accounts/tiktok_addisonre.jpg",
    "updated": "2026-09-29"
@@ -314,7 +314,7 @@
    "platform": "tiktok",
    "handle": "zachking",
    "name": "Zach King",
-   "followers": 86871426,
+   "followers": 86870864,
    "posts": 618,
    "img": "img/accounts/tiktok_zachking.jpg",
    "updated": "2026-09-29"
@@ -323,7 +323,7 @@
    "platform": "tiktok",
    "handle": "tiktok",
    "name": "TikTok",
-   "followers": 95972264,
+   "followers": 95970438,
    "posts": 1507,
    "img": "img/accounts/tiktok_tiktok.jpg",
    "updated": "2026-09-29"
@@ -332,7 +332,7 @@
    "platform": "tiktok",
    "handle": "spencerx",
    "name": "Spencer X",
-   "followers": 53456464,
+   "followers": 53456574,
    "posts": 1295,
    "img": "img/accounts/tiktok_spencerx.jpg",
    "updated": "2026-09-29"
@@ -341,7 +341,7 @@
    "platform": "tiktok",
    "handle": "bayashi.tiktok",
    "name": "バヤシ🥑Bayashi",
-   "followers": 54459040,
+   "followers": 54456690,
    "posts": 1547,
    "img": "img/accounts/tiktok_bayashi.tiktok.jpg",
    "updated": "2026-09-29"
@@ -350,25 +350,25 @@
    "platform": "tiktok",
    "handle": "cznburak",
    "name": "cznburak",
-   "followers": 73243311,
-   "posts": 3230,
+   "followers": 73241295,
+   "posts": 3229,
    "img": "img/accounts/tiktok_cznburak.jpg",
    "updated": "2026-09-29"
   },
   {
    "platform": "tiktok",
-   "handle": "younes_zarou",
-   "name": "younes_zarou",
-   "followers": 1,
-   "posts": 2,
-   "img": "img/accounts/tiktok_younes_zarou.jpg",
+   "handle": "younes.zarou",
+   "name": "younes.zarou",
+   "followers": 0,
+   "posts": 0,
+   "img": "img/accounts/tiktok_younes.zarou.jpg",
    "updated": "2026-09-29"
   },
   {
    "platform": "tiktok",
    "handle": "twenty4tim",
    "name": "Tim 🌮",
-   "followers": 6520543,
+   "followers": 6520621,
    "posts": 6698,
    "img": "img/accounts/tiktok_twenty4tim.jpg",
    "updated": "2026-09-29"
@@ -377,7 +377,7 @@
    "platform": "tiktok",
    "handle": "julienbam",
    "name": "JulienBam",
-   "followers": 1914579,
+   "followers": 1914576,
    "posts": 203,
    "img": "img/accounts/tiktok_julienbam.jpg",
    "updated": "2026-09-29"
@@ -386,7 +386,7 @@
    "platform": "tiktok",
    "handle": "dagibee",
    "name": "dagi",
-   "followers": 1111614,
+   "followers": 1111626,
    "posts": 729,
    "img": "img/accounts/tiktok_dagibee.jpg",
    "updated": "2026-09-29"
@@ -395,7 +395,7 @@
    "platform": "tiktok",
    "handle": "lorengray",
    "name": "Loren Gray",
-   "followers": 52694044,
+   "followers": 52694211,
    "posts": 3372,
    "img": "img/accounts/tiktok_lorengray.jpg",
    "updated": "2026-09-29"
@@ -404,7 +404,7 @@
    "platform": "tiktok",
    "handle": "domelipa",
    "name": "DOME",
-   "followers": 75288000,
+   "followers": 75251621,
    "posts": 619,
    "img": "img/accounts/tiktok_domelipa.jpg",
    "updated": "2026-09-29"
@@ -413,7 +413,7 @@
    "platform": "tiktok",
    "handle": "willsmith",
    "name": "Will Smith",
-   "followers": 77828805,
+   "followers": 77825904,
    "posts": 443,
    "img": "img/accounts/tiktok_willsmith.jpg",
    "updated": "2026-09-29"
@@ -422,7 +422,7 @@
    "platform": "tiktok",
    "handle": "jasonderulo",
    "name": "Jason Derulo",
-   "followers": 66292280,
+   "followers": 66292028,
    "posts": 1115,
    "img": "img/accounts/tiktok_jasonderulo.jpg",
    "updated": "2026-09-29"
