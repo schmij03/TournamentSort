@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tournamentsort">
+<meta name="theme-color" content="#ffffff">
+<title>Tournamentsort</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%86%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <h1><span class="trophy">🏆</span> Tournamentsort</h1>
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-view="profiles" role="tab">1. Profile</button>
+    <button class="tab" data-view="game" role="tab">2. Turnier</button>
+    <button class="tab" data-view="help" role="tab">?</button>
+  </nav>
+</header>
+
+<!-- ============ PROFILE ============ -->
+<main id="view-profiles" class="view active">
+  <section class="intro">
+    <p>Sammle <strong>2 bis 8</strong> Instagram- oder TikTok-Profile. Die Karten treten danach im Turnier gegeneinander an:
+      <strong>Wer mehr Follower hat, gewinnt den Zweikampf.</strong></p>
+  </section>
+
+  <div class="cols">
+    <section class="panel">
+      <h2 id="form-title">Profil hinzufügen</h2>
+      <form id="profile-form" autocomplete="off">
+        <div class="seg" role="radiogroup" aria-label="Plattform">
+          <label><input type="radio" name="platform" value="instagram" checked><span class="ig-pill">Instagram</span></label>
+          <label><input type="radio" name="platform" value="tiktok"><span class="tt-pill">TikTok</span></label>
+        </div>
+        <label class="field">Benutzername oder Profil-Link
+          <input id="f-handle" name="handle" placeholder="@name oder https://instagram.com/name" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+        </label>
+        <label class="field">Anzeigename <span class="muted">(freiwillig)</span>
+          <input id="f-name" name="name" placeholder="z. B. Lea Muster">
+        </label>
+        <label class="field">Anzahl Follower
+          <input id="f-followers" name="followers" placeholder="z. B. 1,2 Mio. oder 45.3K oder 812" required>
+          <small id="f-followers-preview" class="muted">So wie es in der App steht, z. B. «1,2 Mio.» oder «45,3K».</small>
+        </label>
+        <div class="field">Profilbild <span class="muted">(freiwillig)</span>
+          <div class="img-row">
+            <div id="f-img-preview" class="av big"></div>
+            <div class="img-btns">
+              <label class="btn small">📷 Foto oder Screenshot wählen
+                <input id="f-file" type="file" accept="image/*" hidden>
+              </label>
+              <button type="button" id="f-web" class="btn small ghost">🌐 Bild aus dem Internet laden</button>
+              <button type="button" id="f-img-clear" class="btn small ghost">Bild entfernen</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn primary" id="f-submit">＋ Hinzufügen</button>
+          <button type="button" class="btn ghost" id="f-cancel" hidden>Abbrechen</button>
+        </div>
+      </form>
+
+      <details class="more">
+        <summary>Mehrere Profile auf einmal einfügen</summary>
+        <p class="muted">Eine Zeile pro Profil: Plattform, Benutzername, Follower. Beispiel:</p>
+        <pre class="example">instagram @name.eins 1,2 Mio
+tiktok @name_zwei 845K
+https://www.tiktok.com/@name3 12'400</pre>
+        <textarea id="bulk" rows="5" placeholder="Hier einfügen …" autocapitalize="none" spellcheck="false"></textarea>
+        <button type="button" class="btn" id="bulk-add">Einfügen</button>
+      </details>
+    </section>
+
+    <section class="panel">
+      <div class="list-head">
+        <h2>Deine Profile</h2>
+        <span id="sel-count" class="badge">0/8 im Turnier</span>
+      </div>
+      <ul id="profile-list" class="plist"></ul>
+      <p id="empty-hint" class="muted center">Noch keine Profile. Füge links welche hinzu oder lade die Beispiele.</p>
+      <div class="list-actions">
+        <button type="button" class="btn ghost small" id="load-examples">Beispielprofile laden</button>
+        <button type="button" class="btn ghost small" id="share-set">🔗 Als Link teilen</button>
+        <button type="button" class="btn ghost small danger" id="clear-all">Alle löschen</button>
+      </div>
+      <button type="button" class="btn primary wide" id="go-game">Zum Turnier ➜</button>
+    </section>
+  </div>
+</main>
+
+<!-- ============ TURNIER ============ -->
+<main id="view-game" class="view">
+  <div class="gamebar">
+    <p id="instruction" class="instruction"></p>
+    <div class="stats"><span id="st-comp">Vergleiche: 0</span><span id="st-err">Fehler: 0</span></div>
+  </div>
+  <div class="toolbar" id="toolbar-setup">
+    <button class="btn" id="btn-shuffle">🔀 Zufällig hinlegen</button>
+    <button class="btn primary" id="btn-start" disabled>Turnier starten ➜</button>
+  </div>
+  <div class="toolbar" id="toolbar-play" hidden>
+    <button class="btn" id="btn-undo">↶ Rückgängig</button>
+    <button class="btn" id="btn-hint">💡 Tipp</button>
+    <button class="btn" id="btn-step">▶ Schritt zeigen</button>
+    <button class="btn" id="btn-auto">⏩ Automatisch</button>
+    <button class="btn" id="btn-log">📋 Protokoll</button>
+    <button class="btn ghost" id="btn-reset">🔄 Neu starten</button>
+  </div>
+  <div id="board" class="board" aria-label="Legeschema">
+    <svg id="lines" class="lines"></svg>
+    <div id="slots"></div>
+    <div id="cards"></div>
+  </div>
+</main>
+
+<!-- ============ HILFE ============ -->
+<main id="view-help" class="view">
+  <section class="panel prose">
+    <h2>So funktioniert der Tournamentsort</h2>
+    <p>Der Tournamentsort (Turniersortieren) funktioniert wie ein Sportturnier: Treten zwei Karten gegeneinander an,
+      kommt die <strong>Siegerkarte</strong> (mehr Follower) eine Ebene weiter nach oben. Die Verlierer scheiden aber nicht aus.
+      Sie treten später wieder an, bis alle Karten in der Rangliste sind.</p>
+    <ol>
+      <li><strong>Karten hinlegen:</strong> Lege alle Karten in die unterste Reihe des Turnierbaums. Tippe dann auf «Turnier starten».</li>
+      <li><strong>Zweikampf:</strong> Zwei Karten nebeneinander bilden ein Paar. Die Karte mit mehr Followern steigt auf das Feld direkt darüber.</li>
+      <li><strong>Nachrücken:</strong> Auf frei gewordene Plätze rücken von unten Karten nach, unten beginnend.</li>
+      <li><strong>Kein Gegner:</strong> Ist neben einer Karte kein Gegner mehr da (und kommt auch keiner mehr nach), rückt sie ohne Zweikampf nach oben.</li>
+      <li><strong>Rang:</strong> Die Karte im Feld «Rang» kommt auf den nächsten freien Platz der Rangliste (Platz 1, dann 2, …).</li>
+    </ol>
+    <h3>Bedienung am iPad</h3>
+    <ul>
+      <li>Karte mit dem Finger auf das Zielfeld <strong>ziehen</strong>, oder</li>
+      <li>Karte <strong>antippen</strong> und danach das Zielfeld antippen.</li>
+      <li>Falsche Züge werden erklärt und als Fehler gezählt. Mit «Rückgängig» kannst du Züge zurücknehmen.</li>
+      <li>«💡 Tipp» zeigt einen möglichen nächsten Zug. «▶ Schritt zeigen» führt ihn aus.</li>
+    </ul>
+    <h3>Follower herausfinden</h3>
+    <p>Öffne das Profil in der Instagram- oder TikTok-App und schreibe die Zahl ab, die bei «Follower» steht.
+      Für das Profilbild kannst du einen Screenshot machen und ihn danach zuschneiden.
+      Die Daten bleiben nur auf deinem Gerät gespeichert.</p>
+    <h3>Nachdenken</h3>
+    <ul>
+      <li>Wie viele Vergleiche (Zweikämpfe) brauchst du für 8 Karten? Vergleiche mit dem Insertionsort.</li>
+      <li>Warum kann die erste Karte, die bei «Rang» ankommt, sicher auf Platz 1?</li>
+      <li>Welche Karten musst du nach jedem Rangplatz neu vergleichen, und welche nicht?</li>
+    </ul>
+  </section>
+</main>
+
+<!-- Toast -->
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<!-- Modal -->
+<div id="modal" class="modal" hidden>
+  <div class="modal-box">
+    <div id="modal-body"></div>
+    <div id="modal-actions" class="modal-actions"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
