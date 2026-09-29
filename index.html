@@ -24,7 +24,7 @@
 <!-- ============ PROFILE ============ -->
 <main id="view-profiles" class="view active">
   <section class="intro">
-    <p>Sammle <strong>2 bis 8</strong> Instagram- oder TikTok-Profile. Die Karten treten danach im Turnier gegeneinander an:
+    <p>Wähle <strong>2 bis 32</strong> TikTok- oder Instagram-Profile (z. B. 8, 16 oder 32). Die Karten treten danach im Turnier gegeneinander an:
       <strong>Wer mehr Follower (oder Beiträge) hat, gewinnt den Zweikampf.</strong></p>
   </section>
 
@@ -33,8 +33,8 @@
       <h2 id="form-title">Profil hinzufügen</h2>
       <form id="profile-form" autocomplete="off">
         <div class="seg" role="radiogroup" aria-label="Plattform">
-          <label><input type="radio" name="platform" value="instagram" checked><span class="ig-pill">Instagram</span></label>
-          <label><input type="radio" name="platform" value="tiktok"><span class="tt-pill">TikTok</span></label>
+          <label><input type="radio" name="platform" value="instagram"><span class="ig-pill">Instagram</span></label>
+          <label><input type="radio" name="platform" value="tiktok" checked><span class="tt-pill">TikTok</span></label>
         </div>
         <label class="field">Benutzername oder Profil-Link
           <input id="f-handle" name="handle" placeholder="@name oder https://instagram.com/name" autocapitalize="none" autocorrect="off" spellcheck="false" required>
@@ -88,7 +88,11 @@ https://www.tiktok.com/@name3 12'400</pre>
       <p id="empty-hint" class="muted center">Noch keine Profile. Füge links welche hinzu oder lade die beliebten Accounts (⭐).</p>
       <div class="list-actions">
         <button type="button" class="btn small" id="load-popular">⭐ Beliebte Accounts laden</button>
-        <button type="button" class="btn ghost small" id="pick-random">🎲 8 zufällig wählen</button>
+        <span class="pick" id="pick-random">🎲 Zufällig:
+          <button type="button" class="btn ghost small" data-n="8">8</button>
+          <button type="button" class="btn ghost small" data-n="16">16</button>
+          <button type="button" class="btn ghost small" data-n="32">32</button>
+        </span>
         <button type="button" class="btn ghost small" id="clear-sel">Auswahl leeren</button>
         <button type="button" class="btn ghost small" id="share-set">🔗 Als Link teilen</button>
         <button type="button" class="btn ghost small danger" id="clear-all">Alle löschen</button>
@@ -110,6 +114,11 @@ https://www.tiktok.com/@name3 12'400</pre>
       <button class="btn small" data-crit="followers">Follower</button>
       <button class="btn small" data-crit="posts">Beiträge</button>
     </div>
+    <div class="crit" id="dir" role="radiogroup" aria-label="Reihenfolge">
+      <span>Reihenfolge:</span>
+      <button class="btn small" data-dir="desc">⬇ Grösste zuerst</button>
+      <button class="btn small" data-dir="asc">⬆ Kleinste zuerst</button>
+    </div>
     <button class="btn" id="btn-shuffle">🔀 Zufällig hinlegen</button>
     <button class="btn primary" id="btn-start" disabled>Turnier starten ➜</button>
   </div>
@@ -122,9 +131,11 @@ https://www.tiktok.com/@name3 12'400</pre>
     <button class="btn ghost" id="btn-reset">🔄 Neu starten</button>
   </div>
   <div id="board" class="board" aria-label="Legeschema">
-    <svg id="lines" class="lines"></svg>
-    <div id="slots"></div>
-    <div id="cards"></div>
+    <div id="stage" class="stage">
+      <svg id="lines" class="lines"></svg>
+      <div id="slots"></div>
+      <div id="cards"></div>
+    </div>
   </div>
 </main>
 
@@ -140,8 +151,11 @@ https://www.tiktok.com/@name3 12'400</pre>
       <li><strong>Zweikampf:</strong> Zwei Karten nebeneinander bilden ein Paar. Die Karte mit mehr Followern (bzw. Beiträgen) steigt auf das Feld direkt darüber.</li>
       <li><strong>Nachrücken:</strong> Auf frei gewordene Plätze rücken von unten Karten nach, unten beginnend.</li>
       <li><strong>Kein Gegner:</strong> Ist neben einer Karte kein Gegner mehr da (und kommt auch keiner mehr nach), rückt sie ohne Zweikampf nach oben.</li>
-      <li><strong>Rang:</strong> Die Karte im Feld «Rang» kommt auf den nächsten freien Platz der Rangliste (Platz 1, dann 2, …).</li>
+      <li><strong>Rang:</strong> Ist eine Karte zuoberst im Feld «Rang», kommt sie automatisch auf den nächsten freien Platz der Rangliste (Platz 1, dann 2, …).</li>
     </ol>
+    <p>Vor dem Start wählst du, ob nach <strong>Follower</strong> oder <strong>Beiträgen</strong> sortiert wird und ob die
+      <strong>grösste</strong> oder die <strong>kleinste</strong> Zahl gewinnt. Mit 16 oder 32 Karten wird der Baum grösser;
+      dann kannst du im Legeschema seitlich scrollen.</p>
     <h3>Bedienung am iPad</h3>
     <ul>
       <li>Karte mit dem Finger auf das Zielfeld <strong>ziehen</strong>, oder</li>

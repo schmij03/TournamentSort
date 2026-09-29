@@ -5,7 +5,7 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const STORE_PROFILES = 'tsort_profiles_v1';
 const STORE_GAME = 'tsort_game_v1';
-const MAX = 8;
+const MAX = 32; // höchstens so viele Karten im Turnier
 
 function load(key, fallback) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
@@ -61,8 +61,8 @@ function parseHandle(input) {
 }
 
 const CRIT = {
-  followers: { label: 'Follower', more: 'mehr Followern', less: 'weniger Follower' },
-  posts: { label: 'Beiträge', more: 'mehr Beiträgen', less: 'weniger Beiträge' }
+  followers: { label: 'Follower', more: 'mehr Followern', fewer: 'weniger Followern', lessN: 'weniger Follower', moreN: 'mehr Follower' },
+  posts: { label: 'Beiträge', more: 'mehr Beiträgen', fewer: 'weniger Beiträgen', lessN: 'weniger Beiträge', moreN: 'mehr Beiträge' }
 };
 
 /* ---------------- Profile ---------------- */
@@ -123,7 +123,7 @@ function renderProfiles() {
 
 function addProfile(data) {
   const n = profiles.filter(p => p.sel).length;
-  const p = { id: uid(), platform: 'instagram', name: '', img: null, ...data, sel: n < MAX };
+  const p = { id: uid(), platform: 'tiktok', name: '', img: null, ...data, sel: n < 8 };
   profiles.push(p);
   return p;
 }
@@ -179,7 +179,7 @@ function initProfileView() {
         return toast(`@${handle} ist schon in der Liste.`, 'err');
       }
       const p = addProfile(data);
-      toast(p.sel ? `@${handle} hinzugefügt.` : `@${handle} hinzugefügt (nicht im Turnier, es sind schon ${MAX} ausgewählt).`, 'ok');
+      toast(p.sel ? `@${handle} hinzugefügt.` : `@${handle} hinzugefügt. Setze das Häkchen, damit es im Turnier mitmacht.`, 'ok');
     }
     saveProfiles(); renderProfiles(); resetForm();
   });
@@ -248,15 +248,16 @@ function initProfileView() {
   });
 
   $('#load-popular').addEventListener('click', loadPopular);
-  $('#pick-random').addEventListener('click', () => {
+  $$('#pick-random [data-n]').forEach(b => b.addEventListener('click', () => {
+    const N = +b.dataset.n;
     const q = $('#search').value.trim().toLowerCase().replace(/^@/, '');
     const pool = q ? profiles.filter(p => (p.handle + ' ' + (p.name || '')).toLowerCase().includes(q)) : profiles;
     if (pool.length < 2) return toast('Es braucht mindestens 2 Profile.', 'err');
     profiles.forEach(p => { p.sel = false; });
-    shuffle(pool.slice()).slice(0, MAX).forEach(p => { p.sel = true; });
+    shuffle(pool.slice()).slice(0, N).forEach(p => { p.sel = true; });
     saveProfiles(); renderProfiles();
-    toast(`${Math.min(MAX, pool.length)} Profile zufällig gewählt.`, 'ok');
-  });
+    toast(`${Math.min(N, pool.length)} Profile zufällig gewählt.`, 'ok');
+  }));
   $('#clear-sel').addEventListener('click', () => { profiles.forEach(p => { p.sel = false; }); saveProfiles(); renderProfiles(); });
   $('#search').addEventListener('input', renderProfiles);
 
@@ -314,7 +315,7 @@ async function loadPopular() {
     if (p) { Object.assign(p, fields); updated++; }
     else { profiles.push({ id: uid(), platform: acc.platform, handle: acc.handle, img: null, ...fields, sel: false }); added++; }
   }
-  if (noneSelected) shuffle(profiles.slice()).slice(0, MAX).forEach(p => { p.sel = true; });
+  if (noneSelected) shuffle(profiles.slice()).slice(0, 8).forEach(p => { p.sel = true; });
   saveProfiles(); renderProfiles();
   const stand = data.updated ? ` (Stand ${data.updated.split('-').reverse().join('.')})` : '';
   toast(`${added} Accounts geladen, ${updated} aktualisiert${stand}.` + (noneSelected ? ' 8 davon sind zufällig fürs Turnier gewählt.' : ''), 'ok', 4000);
@@ -421,18 +422,22 @@ function openCropper(file, cb) {
 
 /* ---------------- Turnier ---------------- */
 /*
-  Baum als Array (wie ein Heap): Index 0 = «Rang», 1..2, 3..6, 7..14 = unterste Reihe.
-  Kinder von i: 2i+1 und 2i+2. Plätze heissen t0..t14 (Baum), r0..r7 (Rangliste), b0..b7 (Startkarten).
+  Baum als Array (wie ein Heap): Index 0 = «Rang», darunter 1..2, 3..6, … bis zur untersten Reihe.
+  Kinder von i: 2i+1 und 2i+2. Bei 8 Startplätzen hat der Baum 15 Felder, bei 16 sind es 31, bei 32 sind es 63.
+  Plätze heissen t0… (Baum), r0… (Rangliste), b0… (Startkarten).
 */
 let game = load(STORE_GAME, null);
 let selected = null;
 let autoTimer = null;
 let L = null; // aktuelles Layout
+let rankTimer = null;
 const cardEls = new Map();
 
 const parentOf = i => (i - 1) >> 1;
 const siblingOf = i => (i % 2 ? i + 1 : i - 1);
-const levelOf = i => (i === 0 ? 0 : i < 3 ? 1 : i < 7 ? 2 : 3);
+const levelOf = i => Math.floor(Math.log2(i + 1));
+const leafCount = n => { let l = 2; while (l < n) l *= 2; return l; };
+const isLeaf = i => i >= game.leaves - 1;
 
 function newGame() {
   const sel = selectedProfiles();
@@ -441,14 +446,16 @@ function newGame() {
   const ids = shuffle(sel.map(p => p.id));
   let crit = (game && game.crit) || 'followers';
   if (crit === 'posts' && sel.some(p => p.posts == null)) crit = 'followers';
+  const dir = (game && game.dir) || 'desc';
+  const leaves = leafCount(ids.length);
   game = {
-    crit,
+    crit, dir, leaves,
     sig: signature(),
     cards,
     n: ids.length,
-    tree: Array(15).fill(null),
+    tree: Array(2 * leaves - 1).fill(null),
     rank: Array(ids.length).fill(null),
-    bench: Array.from({ length: MAX }, (_, i) => ids[i] || null),
+    bench: Array.from({ length: leaves }, (_, i) => ids[i] || null),
     phase: 'setup',
     comparisons: 0, mistakes: 0, hints: 0,
     log: [], hist: []
@@ -472,26 +479,29 @@ const card = id => game.cards[id];
 const crit = () => CRIT[game.crit || 'followers'];
 const val = c => c[game.crit || 'followers'] ?? 0;
 const who = c => `@${c.handle} (${fmtCount(val(c))} ${crit().label})`;
+const desc = () => game.dir !== 'asc';
 
 function subtreeEmpty(i) {
-  if (i >= 15) return true;
+  if (i >= game.tree.length) return true;
   if (game.tree[i]) return false;
   return subtreeEmpty(2 * i + 1) && subtreeEmpty(2 * i + 2);
 }
 // Gewinnt a gegen b? Gleichstand (auch gleich angezeigte Zahlen) zählt für beide.
-function beats(a, b) { return val(a) >= val(b) || fmtCount(val(a)) === fmtCount(val(b)); }
+function beats(a, b) {
+  if (fmtCount(val(a)) === fmtCount(val(b))) return true;
+  return desc() ? val(a) > val(b) : val(a) < val(b);
+}
 
 function snapshot() {
   game.hist.push(JSON.stringify({ tree: game.tree, rank: game.rank, bench: game.bench, phase: game.phase, comparisons: game.comparisons, log: game.log }));
   if (game.hist.length > 200) game.hist.shift();
 }
 
-/* Alle erlaubten Züge; Reihenfolge: Rang zuerst, dann von unten nach oben */
+/* Alle erlaubten Züge, von unten nach oben (die Karte bei «Rang» wird automatisch eingeordnet) */
 function validMoves() {
   const moves = [];
   if (game.phase !== 'play') return moves;
-  if (game.tree[0]) moves.push({ id: game.tree[0], to: 'r' + game.rank.indexOf(null) });
-  for (let i = 14; i >= 1; i--) {
+  for (let i = game.tree.length - 1; i >= 1; i--) {
     const id = game.tree[i]; if (!id) continue;
     const p = parentOf(i); if (game.tree[p]) continue;
     const s = siblingOf(i), sid = game.tree[s];
@@ -513,7 +523,7 @@ function tryMove(id, to, auto = false) {
   if (game.phase === 'done') { layoutCards(); return false; }
 
   if (game.phase === 'setup') {
-    if (tt === 'r' || (tt === 't' && ti < 7)) return fail(id, 'Lege zuerst alle Karten in die unterste Reihe und tippe dann auf «Turnier starten».');
+    if (tt === 'r' || (tt === 't' && !isLeaf(ti))) return fail(id, 'Lege zuerst alle Karten in die unterste Reihe und tippe dann auf «Turnier starten».');
     const other = get(to);
     snapshot();
     set(to, id); set(from, other);
@@ -546,7 +556,7 @@ function tryMove(id, to, auto = false) {
   const a = card(id);
   if (sid) {
     const b = card(sid);
-    if (!beats(a, b)) return fail(id, `Zweikampf verloren: ${who(a)} hat ${crit().less} als ${who(b)}. Die Siegerkarte steigt auf.`, sid);
+    if (!beats(a, b)) return fail(id, `Zweikampf verloren: ${who(a)} hat ${desc() ? crit().lessN : crit().moreN} als ${who(b)}. Die Siegerkarte steigt auf.`, sid);
     snapshot();
     game.comparisons++;
     game.tree[p] = id; game.tree[fi] = null;
@@ -585,13 +595,32 @@ function after(movedId) {
     if (el) { el.classList.remove('win'); void el.offsetWidth; el.classList.add('win'); }
   }
   if (game.phase === 'done') { stopAuto(); setTimeout(showResult, 700); }
+  scheduleAutoRank();
   return true;
+}
+
+/* Ist eine Karte zuoberst («Rang»), kommt sie automatisch auf den nächsten freien Platz der Rangliste. */
+function scheduleAutoRank() {
+  clearTimeout(rankTimer);
+  if (!game || game.phase !== 'play' || !game.tree[0]) return;
+  rankTimer = setTimeout(() => {
+    const id = game.tree[0];
+    if (!id || game.phase !== 'play') return;
+    if (drag && drag.id === id) return scheduleAutoRank();
+    const ti = game.rank.indexOf(null);
+    game.rank[ti] = id; game.tree[0] = null;
+    if (selected === id) selected = null;
+    game.log.push(`🏆 ${who(card(id))} ist zuoberst und kommt auf Platz ${ti + 1}.`);
+    toast(`🏆 Platz ${ti + 1}: @${card(id).handle}`, 'ok');
+    after(id);
+  }, 700);
 }
 
 function undo() {
   stopAuto();
   const h = game.hist.pop();
   if (!h) return toast('Es gibt nichts mehr rückgängig zu machen.');
+  clearTimeout(rankTimer);
   Object.assign(game, JSON.parse(h));
   saveGame(); clearSelection(); relayout();
 }
@@ -607,10 +636,13 @@ function startTournament() {
 function shuffleOntoLeaves() {
   snapshot();
   const ids = shuffle(Object.keys(game.cards));
-  game.bench = Array(MAX).fill(null);
-  game.tree = Array(15).fill(null);
-  // gleichmässig verteilen, damit bei weniger als 8 Karten trotzdem Zweikämpfe entstehen
-  const order = [7, 9, 11, 13, 8, 10, 12, 14];
+  const Lf = game.leaves;
+  game.bench = Array(Lf).fill(null);
+  game.tree = Array(2 * Lf - 1).fill(null);
+  // gleichmässig verteilen: zuerst in jedes Paar eine Karte, dann auffüllen
+  const order = [];
+  for (let k = 0; k < Lf; k += 2) order.push(Lf - 1 + k);
+  for (let k = 1; k < Lf; k += 2) order.push(Lf - 1 + k);
   const slots = order.slice(0, ids.length).sort((a, b) => a - b);
   slots.forEach((s, k) => { game.tree[s] = ids[k]; });
   clearSelection(); saveGame(); updateGameUI(); layoutCards();
@@ -618,15 +650,14 @@ function shuffleOntoLeaves() {
 
 function hint(perform = false) {
   const m = validMoves()[0];
-  if (!m) return;
+  if (!m) return toast('Einen Moment: Die Karte bei «Rang» wird gerade eingeordnet.');
   game.hints++; saveGame();
   if (perform) { tryMove(m.id, m.to, true); return; }
   const el = cardEls.get(m.id), sl = $(`.slot[data-key="${m.to}"]`);
   [el, sl].forEach(x => { if (x) { x.classList.remove('hint'); void x.offsetWidth; x.classList.add('hint'); } });
   const c = card(m.id), from = +locOf(m.id).slice(1);
   let msg;
-  if (m.to[0] === 'r') msg = `Tipp: @${c.handle} steht bei «Rang» und kommt auf Platz ${+m.to.slice(1) + 1}.`;
-  else {
+  {
     const sid = game.tree[siblingOf(from)];
     msg = sid ? `Tipp: Zweikampf! @${c.handle} gegen @${card(sid).handle}.` : `Tipp: @${c.handle} hat keinen Gegner mehr und rückt nach oben.`;
   }
@@ -639,9 +670,13 @@ function toggleAuto() {
   $('#btn-auto').textContent = '⏸ Stopp';
   const tick = () => {
     const m = validMoves()[0];
-    if (!m) return stopAuto();
+    if (!m) {
+      // Karte bei «Rang» wird gerade automatisch eingeordnet: kurz warten
+      if (game.phase === 'play' && game.tree[0]) { autoTimer = setTimeout(tick, 400); return; }
+      return stopAuto();
+    }
     tryMove(m.id, m.to, true);
-    autoTimer = setTimeout(tick, 900);
+    autoTimer = setTimeout(tick, game.leaves >= 32 ? 350 : game.leaves >= 16 ? 550 : 900);
   };
   tick();
 }
@@ -679,51 +714,58 @@ function showLog() {
 function computeLayout() {
   const board = $('#board');
   const W = board.clientWidth, H = board.clientHeight;
+  const Lf = game.leaves, depth = Math.log2(Lf);
   const setup = game.phase === 'setup';
-  const rows = setup ? 6 : 5;
+  const rows = 1 + (depth + 1) + (setup ? 1 : 0);
   const CAP = 22, PAD = 10;
-  const caps = setup ? 3 : 2;
+  const caps = setup ? 2 : 1;
   const RATIO = 1.32, GAP = 0.34;
-  let cw = (H - 2 * PAD - caps * CAP) / (rows * RATIO + (rows - 1) * GAP);
-  cw = Math.min(cw, W / 9.4, 150);
-  cw = Math.max(cw, 40);
+  const span = Lf * 1.08 + (Lf / 2 - 1) * 0.22; // Breite der untersten Reihe in Kartenbreiten
+  let cw = Math.min((H - 2 * PAD - caps * CAP) / (rows * RATIO + (rows - 1) * GAP), (W - 2 * PAD) / span, 150);
+  const compact = cw < 66;
+  cw = Math.max(cw, compact ? 50 : 40); // nicht kleiner als fingerfreundlich, sonst wird gescrollt
   const ch = cw * RATIO, g = cw * GAP;
   const step = cw * 1.08, extra = cw * 0.22;
-  const totalW = 8 * step + 3 * extra;
-  const x0 = (W - totalW) / 2;
+  const totalW = Lf * step + (Lf / 2 - 1) * extra;
+  const stageW = Math.max(W, totalW + 2 * PAD);
+  const x0 = (stageW - totalW) / 2;
   const colX = k => x0 + k * step + Math.floor(k / 2) * extra + (step - cw) / 2; // linke Kante
 
   const pos = {}; const captions = [];
   let y = PAD;
   captions.push({ text: 'Rangliste', x: Math.max(8, colX(0)), y });
   y += CAP;
-  const rankW = game.n;
-  for (let k = 0; k < MAX; k++) if (k < rankW) pos['r' + k] = { x: colX(k), y };
+  for (let k = 0; k < game.n; k++) pos['r' + k] = { x: colX(k), y };
   y += ch + g;
-  const leafX = [];
-  for (let k = 0; k < 8; k++) leafX[k] = colX(k);
-  const treeX = Array(15);
-  for (let i = 7; i < 15; i++) treeX[i] = leafX[i - 7];
-  for (let i = 6; i >= 0; i--) treeX[i] = (treeX[2 * i + 1] + treeX[2 * i + 2]) / 2;
+  const size = 2 * Lf - 1;
+  const treeX = Array(size);
+  for (let k = 0; k < Lf; k++) treeX[Lf - 1 + k] = colX(k);
+  for (let i = Lf - 2; i >= 0; i--) treeX[i] = (treeX[2 * i + 1] + treeX[2 * i + 2]) / 2;
   const rowY = [];
-  for (let lv = 0; lv < 4; lv++) { rowY[lv] = y; y += ch + g; }
-  for (let i = 0; i < 15; i++) pos['t' + i] = { x: treeX[i], y: rowY[levelOf(i)] };
-  captions.push({ text: 'Rang ➜', x: Math.max(8, colX(0)), y: rowY[0] + ch / 2 - 8, side: true });
+  for (let lv = 0; lv <= depth; lv++) { rowY[lv] = y; y += ch + g; }
+  for (let i = 0; i < size; i++) pos['t' + i] = { x: treeX[i], y: rowY[levelOf(i)] };
+  const labelX = treeX[0] - 78;
+  captions.push(labelX >= PAD
+    ? { text: 'Rang ➜', x: labelX, y: rowY[0] + ch / 2 - 8 }
+    : { text: '⬅ Rang', x: treeX[0] + cw + 10, y: rowY[0] + ch / 2 - 8 });
   if (setup) {
     y += CAP - g + 6;
     captions.push({ text: 'Startkarten: Lege sie in die unterste Reihe', x: Math.max(8, colX(0)), y: y - CAP });
-    for (let k = 0; k < MAX; k++) pos['b' + k] = { x: colX(k), y };
+    for (let k = 0; k < Lf; k++) pos['b' + k] = { x: colX(k), y };
     y += ch;
   }
-  return { W, H, cw, ch, g, pos, captions, rowY, height: y + PAD };
+  return { W, H, cw, ch, g, pos, captions, rowY, compact, stageW, height: Math.max(H, y + PAD) };
 }
 
 function relayout() {
   if (!game) return;
   L = computeLayout();
-  const board = $('#board');
+  const board = $('#board'), stage = $('#stage');
   board.style.setProperty('--cw', L.cw + 'px');
   board.style.setProperty('--ch', L.ch + 'px');
+  board.classList.toggle('compact', L.compact);
+  stage.style.width = L.stageW + 'px';
+  stage.style.height = L.height + 'px';
 
   // Plätze
   const slots = $('#slots');
@@ -741,7 +783,7 @@ function relayout() {
 
   // Linien
   let d = '';
-  for (let p = 0; p < 7; p++) {
+  for (let p = 0; p < game.leaves - 1; p++) {
     const a = L.pos['t' + (2 * p + 1)], b = L.pos['t' + (2 * p + 2)], par = L.pos['t' + p];
     const cx = L.cw / 2;
     const mid = par.y + L.ch + L.g / 2;
@@ -768,6 +810,7 @@ function relayout() {
   }
   updateGameUI();
   layoutCards();
+  scheduleAutoRank();
 }
 
 function layoutCards() {
@@ -789,6 +832,7 @@ function updateGameUI() {
   $('#toolbar-play').hidden = setup;
   $('#btn-start').disabled = game.bench.some(Boolean);
   $$('#crit .btn').forEach(b => b.classList.toggle('on', b.dataset.crit === (game.crit || 'followers')));
+  $$('#dir .btn').forEach(b => b.classList.toggle('on', b.dataset.dir === (game.dir || 'desc')));
   $('#st-comp').textContent = `Vergleiche: ${game.comparisons}`;
   $('#st-err').textContent = `Fehler: ${game.mistakes}`;
   $('#btn-hint').disabled = $('#btn-step').disabled = game.phase !== 'play';
@@ -801,9 +845,9 @@ function updateGameUI() {
   } else if (game.phase === 'done') {
     text = '🏆 Fertig! Alle Karten sind in der Rangliste.';
   } else if (game.tree[0]) {
-    text = 'Eine Karte ist bei «Rang» angekommen. Setze sie auf den nächsten freien Platz der Rangliste.';
+    text = `🏆 @${card(game.tree[0]).handle} ist zuoberst und kommt auf Platz ${game.rank.indexOf(null) + 1} der Rangliste.`;
   } else {
-    text = `Lass immer zwei Karten gegeneinander antreten: Die Karte mit ${crit().more} steigt eine Ebene auf.`;
+    text = `Lass immer zwei Karten gegeneinander antreten: Die Karte mit ${desc() ? crit().more : crit().fewer} steigt eine Ebene auf.`;
   }
   $('#instruction').textContent = text;
 }
@@ -823,7 +867,7 @@ function slotAt(x, y) {
   }
   return best;
 }
-function boardPoint(e) { const r = $('#board').getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+function boardPoint(e) { const r = $('#stage').getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
 function clearSelection() { selected = null; $$('.card.selected').forEach(c => c.classList.remove('selected')); }
 
 function initBoard() {
@@ -879,6 +923,8 @@ function onTapCard(id) {
   if (selected === id) { clearSelection(); return; }
   selected = id;
   layoutCards();
+  const c = card(id);
+  toast(`@${c.handle}: ${fmtCount(c.followers)} Follower` + (c.posts != null ? `, ${fmtCount(c.posts)} Beiträge` : ''), '', 2200);
 }
 
 /* ---------------- Views, Toast, Modal ---------------- */
@@ -891,7 +937,7 @@ function showView(name) {
       showView('profiles');
       return toast('Wähle zuerst mindestens 2 Profile für das Turnier aus.', 'err');
     }
-    if (!game || game.sig !== signature()) newGame();
+    if (!game || !game.leaves || game.sig !== signature()) newGame();
     fitBoard();
     relayout();
   }
@@ -945,6 +991,10 @@ function init() {
       return toast('Nicht bei allen Karten ist die Anzahl Beiträge bekannt. Ergänze sie unter «1. Profile».', 'err', 4000);
     }
     game.crit = c; saveGame(); relayout();
+  }));
+  $$('#dir .btn').forEach(b => b.addEventListener('click', () => {
+    if (game.phase !== 'setup') return;
+    game.dir = b.dataset.dir; saveGame(); updateGameUI();
   }));
   $('#btn-start').addEventListener('click', startTournament);
   $('#btn-undo').addEventListener('click', undo);
