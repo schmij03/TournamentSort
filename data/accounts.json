@@ -2,7 +2,7 @@
  "updated": "2026-09-29",
  "accounts": [
   {
-   "platform": "instagram",
+   "platform": "tiktok",
    "handle": "sek.ds",
    "name": "",
    "followers": null,
@@ -11,255 +11,7 @@
   },
   {
    "platform": "instagram",
-   "handle": "cristiano",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": "img/accounts/instagram_cristiano.jpg"
-  },
-  {
-   "platform": "instagram",
-   "handle": "leomessi",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "selenagomez",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": "img/accounts/instagram_selenagomez.jpg"
-  },
-  {
-   "platform": "instagram",
-   "handle": "kyliejenner",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "arianagrande",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "therock",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "kimkardashian",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "taylorswift",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": "img/accounts/instagram_taylorswift.jpg"
-  },
-  {
-   "platform": "instagram",
-   "handle": "billieeilish",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "neymarjr",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "k.mbappe",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "erling",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "lamineyamal",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "judebellingham",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "zendaya",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "tomholland2013",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "jennaortega",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "milliebobbybrown",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "sabrinacarpenter",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "oliviarodrigo",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "badbunnypr",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "champagnepapi",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "lalalalisa_m",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "jennierubyjane",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "nike",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "realmadrid",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "fcbarcelona",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "natgeo",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": "img/accounts/instagram_natgeo.jpg"
-  },
-  {
-   "platform": "instagram",
-   "handle": "shirindavid",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "apache_207",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "pamela_rf",
-   "name": "",
-   "followers": null,
-   "posts": null,
-   "img": null
-  },
-  {
-   "platform": "instagram",
-   "handle": "rogerfederer",
+   "handle": "sek.ds",
    "name": "",
    "followers": null,
    "posts": null,
@@ -269,7 +21,7 @@
    "platform": "tiktok",
    "handle": "khaby.lame",
    "name": "Khabane lame",
-   "followers": 162967784,
+   "followers": 162969315,
    "posts": 1356,
    "img": "img/accounts/tiktok_khaby.lame.jpg",
    "updated": "2026-09-29"
@@ -278,7 +30,7 @@
    "platform": "tiktok",
    "handle": "charlidamelio",
    "name": "charli d’amelio",
-   "followers": 160309901,
+   "followers": 160310578,
    "posts": 3277,
    "img": "img/accounts/tiktok_charlidamelio.jpg",
    "updated": "2026-09-29"
@@ -287,7 +39,7 @@
    "platform": "tiktok",
    "handle": "mrbeast",
    "name": "MrBeast",
-   "followers": 142397107,
+   "followers": 142407265,
    "posts": 477,
    "img": "img/accounts/tiktok_mrbeast.jpg",
    "updated": "2026-09-29"
@@ -296,7 +48,7 @@
    "platform": "tiktok",
    "handle": "bellapoarch",
    "name": "Bella Poarch",
-   "followers": 91610829,
+   "followers": 91611678,
    "posts": 139,
    "img": "img/accounts/tiktok_bellapoarch.jpg",
    "updated": "2026-09-29"
@@ -305,7 +57,7 @@
    "platform": "tiktok",
    "handle": "addisonre",
    "name": "Addison Rae",
-   "followers": 87724975,
+   "followers": 87722526,
    "posts": 407,
    "img": "img/accounts/tiktok_addisonre.jpg",
    "updated": "2026-09-29"
@@ -314,25 +66,187 @@
    "platform": "tiktok",
    "handle": "zachking",
    "name": "Zach King",
-   "followers": 86870864,
+   "followers": 86871522,
    "posts": 618,
    "img": "img/accounts/tiktok_zachking.jpg",
    "updated": "2026-09-29"
   },
   {
    "platform": "tiktok",
-   "handle": "tiktok",
-   "name": "TikTok",
-   "followers": 95970438,
-   "posts": 1507,
-   "img": "img/accounts/tiktok_tiktok.jpg",
+   "handle": "willsmith",
+   "name": "Will Smith",
+   "followers": 77828788,
+   "posts": 443,
+   "img": "img/accounts/tiktok_willsmith.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "therock",
+   "name": "The Rock",
+   "followers": 79716829,
+   "posts": 574,
+   "img": "img/accounts/tiktok_therock.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "selenagomez",
+   "name": "Selena Gomez",
+   "followers": 58569607,
+   "posts": 270,
+   "img": "img/accounts/tiktok_selenagomez.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "kyliejenner",
+   "name": "Kylie Jenner",
+   "followers": 59610318,
+   "posts": 606,
+   "img": "img/accounts/tiktok_kyliejenner.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "billieeilish",
+   "name": "BILLIE EILISH",
+   "followers": 74769879,
+   "posts": 82,
+   "img": "img/accounts/tiktok_billieeilish.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "taylorswift",
+   "name": "Taylor Swift",
+   "followers": 33408214,
+   "posts": 86,
+   "img": "img/accounts/tiktok_taylorswift.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "arianagrande",
+   "name": "arianagrande",
+   "followers": 44786981,
+   "posts": 427,
+   "img": "img/accounts/tiktok_arianagrande.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "sabrinacarpenter",
+   "name": "Sabrina Carpenter",
+   "followers": 38507534,
+   "posts": 267,
+   "img": "img/accounts/tiktok_sabrinacarpenter.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "livbedumb",
+   "name": "Olivia Rodrigo",
+   "followers": 27953675,
+   "posts": 205,
+   "img": "img/accounts/tiktok_livbedumb.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "jasonderulo",
+   "name": "Jason Derulo",
+   "followers": 66292277,
+   "posts": 1115,
+   "img": "img/accounts/tiktok_jasonderulo.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "lorengray",
+   "name": "Loren Gray",
+   "followers": 52694050,
+   "posts": 3372,
+   "img": "img/accounts/tiktok_lorengray.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "domelipa",
+   "name": "DOME",
+   "followers": 75287961,
+   "posts": 619,
+   "img": "img/accounts/tiktok_domelipa.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "dixiedamelio",
+   "name": "dixie",
+   "followers": 53627312,
+   "posts": 891,
+   "img": "img/accounts/tiktok_dixiedamelio.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "noahbeck",
+   "name": "noah beck",
+   "followers": 32677688,
+   "posts": 3421,
+   "img": "img/accounts/tiktok_noahbeck.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "brentrivera",
+   "name": "Brent Rivera",
+   "followers": 50941541,
+   "posts": 1820,
+   "img": "img/accounts/tiktok_brentrivera.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "jamescharles",
+   "name": "James Charles",
+   "followers": 39208580,
+   "posts": 1239,
+   "img": "img/accounts/tiktok_jamescharles.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "avani",
+   "name": "avani",
+   "followers": 41017055,
+   "posts": 1376,
+   "img": "img/accounts/tiktok_avani.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "babyariel",
+   "name": "BabyAriel",
+   "followers": 36521780,
+   "posts": 2835,
+   "img": "img/accounts/tiktok_babyariel.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "kimberly.loaiza",
+   "name": "Kimberly Loaiza",
+   "followers": 83425407,
+   "posts": 2213,
+   "img": "img/accounts/tiktok_kimberly.loaiza.jpg",
    "updated": "2026-09-29"
   },
   {
    "platform": "tiktok",
    "handle": "spencerx",
    "name": "Spencer X",
-   "followers": 53456574,
+   "followers": 53456452,
    "posts": 1295,
    "img": "img/accounts/tiktok_spencerx.jpg",
    "updated": "2026-09-29"
@@ -341,7 +255,7 @@
    "platform": "tiktok",
    "handle": "bayashi.tiktok",
    "name": "バヤシ🥑Bayashi",
-   "followers": 54456690,
+   "followers": 54459036,
    "posts": 1547,
    "img": "img/accounts/tiktok_bayashi.tiktok.jpg",
    "updated": "2026-09-29"
@@ -350,9 +264,180 @@
    "platform": "tiktok",
    "handle": "cznburak",
    "name": "cznburak",
-   "followers": 73241295,
-   "posts": 3229,
+   "followers": 73243278,
+   "posts": 3230,
    "img": "img/accounts/tiktok_cznburak.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "bp_tiktok",
+   "name": "BLΛƆKPIИK",
+   "followers": 52560344,
+   "posts": 320,
+   "img": "img/accounts/tiktok_bp_tiktok.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "bts_official_bighit",
+   "name": "BTS",
+   "followers": 80786685,
+   "posts": 358,
+   "img": "img/accounts/tiktok_bts_official_bighit.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "ishowspeed",
+   "name": "IShowSpeed",
+   "followers": 54512219,
+   "posts": 31,
+   "img": "img/accounts/tiktok_ishowspeed.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "kaicenat",
+   "name": "kaicenat",
+   "followers": 0,
+   "posts": 0,
+   "img": "img/accounts/tiktok_kaicenat.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "cristiano",
+   "name": "Ismail tiktok",
+   "followers": 7591,
+   "posts": 0,
+   "img": "img/accounts/tiktok_cristiano.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "realmadrid",
+   "name": "Real Madrid C.F.",
+   "followers": 77254164,
+   "posts": 4842,
+   "img": "img/accounts/tiktok_realmadrid.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "fcbarcelona",
+   "name": "fcbarcelona",
+   "followers": 72829196,
+   "posts": 6123,
+   "img": "img/accounts/tiktok_fcbarcelona.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "psg",
+   "name": "psg",
+   "followers": 56378649,
+   "posts": 3557,
+   "img": "img/accounts/tiktok_psg.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "championsleague",
+   "name": "Champions League",
+   "followers": 59329940,
+   "posts": 1898,
+   "img": "img/accounts/tiktok_championsleague.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "nba",
+   "name": "NBA",
+   "followers": 27225893,
+   "posts": 23755,
+   "img": "img/accounts/tiktok_nba.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "espn",
+   "name": "ESPN",
+   "followers": 61128414,
+   "posts": 10891,
+   "img": "img/accounts/tiktok_espn.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "dudeperfect",
+   "name": "Dude Perfect",
+   "followers": 19179430,
+   "posts": 766,
+   "img": "img/accounts/tiktok_dudeperfect.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "tiktok",
+   "name": "TikTok",
+   "followers": 95972349,
+   "posts": 1507,
+   "img": "img/accounts/tiktok_tiktok.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "netflix",
+   "name": "Netflix",
+   "followers": 53764996,
+   "posts": 8128,
+   "img": "img/accounts/tiktok_netflix.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "disney",
+   "name": "Disney",
+   "followers": 15733819,
+   "posts": 1717,
+   "img": "img/accounts/tiktok_disney.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "tagesschau",
+   "name": "tagesschau",
+   "followers": 2664140,
+   "posts": 4180,
+   "img": "img/accounts/tiktok_tagesschau.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "twenty4tim",
+   "name": "Tim 🌮",
+   "followers": 6520644,
+   "posts": 6698,
+   "img": "img/accounts/tiktok_twenty4tim.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "julienbam",
+   "name": "JulienBam",
+   "followers": 1914578,
+   "posts": 203,
+   "img": "img/accounts/tiktok_julienbam.jpg",
+   "updated": "2026-09-29"
+  },
+  {
+   "platform": "tiktok",
+   "handle": "dagibee",
+   "name": "dagi",
+   "followers": 1111616,
+   "posts": 729,
+   "img": "img/accounts/tiktok_dagibee.jpg",
    "updated": "2026-09-29"
   },
   {
@@ -366,65 +451,64 @@
   },
   {
    "platform": "tiktok",
-   "handle": "twenty4tim",
-   "name": "Tim 🌮",
-   "followers": 6520621,
-   "posts": 6698,
-   "img": "img/accounts/tiktok_twenty4tim.jpg",
+   "handle": "montanablack",
+   "name": "GetOnMyLvL",
+   "followers": 3083564,
+   "posts": 96,
+   "img": "img/accounts/tiktok_montanablack.jpg",
    "updated": "2026-09-29"
   },
   {
    "platform": "tiktok",
-   "handle": "julienbam",
-   "name": "JulienBam",
-   "followers": 1914576,
-   "posts": 203,
-   "img": "img/accounts/tiktok_julienbam.jpg",
+   "handle": "papaplatte",
+   "name": "Papaplatte",
+   "followers": 1051352,
+   "posts": 754,
+   "img": "img/accounts/tiktok_papaplatte.jpg",
    "updated": "2026-09-29"
   },
   {
    "platform": "tiktok",
-   "handle": "dagibee",
-   "name": "dagi",
-   "followers": 1111626,
-   "posts": 729,
-   "img": "img/accounts/tiktok_dagibee.jpg",
+   "handle": "shirindavid",
+   "name": "shirindavid",
+   "followers": 1718434,
+   "posts": 111,
+   "img": "img/accounts/tiktok_shirindavid.jpg",
    "updated": "2026-09-29"
   },
   {
    "platform": "tiktok",
-   "handle": "lorengray",
-   "name": "Loren Gray",
-   "followers": 52694211,
-   "posts": 3372,
-   "img": "img/accounts/tiktok_lorengray.jpg",
+   "handle": "lisaandlena",
+   "name": "notlisaandlena",
+   "followers": 223,
+   "posts": 0,
+   "img": "img/accounts/tiktok_lisaandlena.jpg",
    "updated": "2026-09-29"
   },
   {
    "platform": "tiktok",
-   "handle": "domelipa",
-   "name": "DOME",
-   "followers": 75251621,
-   "posts": 619,
-   "img": "img/accounts/tiktok_domelipa.jpg",
+   "handle": "skiaggu",
+   "name": "",
+   "followers": null,
+   "posts": null,
+   "img": null
+  },
+  {
+   "platform": "tiktok",
+   "handle": "knossi",
+   "name": "Knossi",
+   "followers": 2,
+   "posts": 0,
+   "img": "img/accounts/tiktok_knossi.jpg",
    "updated": "2026-09-29"
   },
   {
    "platform": "tiktok",
-   "handle": "willsmith",
-   "name": "Will Smith",
-   "followers": 77825904,
-   "posts": 443,
-   "img": "img/accounts/tiktok_willsmith.jpg",
-   "updated": "2026-09-29"
-  },
-  {
-   "platform": "tiktok",
-   "handle": "jasonderulo",
-   "name": "Jason Derulo",
-   "followers": 66292028,
-   "posts": 1115,
-   "img": "img/accounts/tiktok_jasonderulo.jpg",
+   "handle": "rewi",
+   "name": "rewi",
+   "followers": 52,
+   "posts": 0,
+   "img": "img/accounts/tiktok_rewi.jpg",
    "updated": "2026-09-29"
   }
  ]
