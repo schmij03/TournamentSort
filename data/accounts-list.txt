@@ -1,0 +1,57 @@
+# Accounts, die die GitHub Action automatisch aktualisiert.
+# Format: plattform handle   (plattform = instagram oder tiktok)
+# Zeilen mit # werden ignoriert.
+
+instagram sek.ds
+
+instagram cristiano
+instagram leomessi
+instagram selenagomez
+instagram kyliejenner
+instagram arianagrande
+instagram therock
+instagram kimkardashian
+instagram taylorswift
+instagram billieeilish
+instagram neymarjr
+instagram k.mbappe
+instagram erling
+instagram lamineyamal
+instagram judebellingham
+instagram zendaya
+instagram tomholland2013
+instagram jennaortega
+instagram milliebobbybrown
+instagram sabrinacarpenter
+instagram oliviarodrigo
+instagram badbunnypr
+instagram champagnepapi
+instagram lalalalisa_m
+instagram jennierubyjane
+instagram nike
+instagram realmadrid
+instagram fcbarcelona
+instagram natgeo
+instagram shirindavid
+instagram apache_207
+instagram pamela_rf
+instagram rogerfederer
+
+tiktok khaby.lame
+tiktok charlidamelio
+tiktok mrbeast
+tiktok bellapoarch
+tiktok addisonre
+tiktok zachking
+tiktok tiktok
+tiktok spencerx
+tiktok bayashi.tiktok
+tiktok cznburak
+tiktok younes_zarou
+tiktok twenty4tim
+tiktok julienbam
+tiktok dagibee
+tiktok lorengray
+tiktok domelipa
+tiktok willsmith
+tiktok jasonderulo

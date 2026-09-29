@@ -1,0 +1,43 @@
+name: Accounts aktualisieren
+
+# Holt Follower, Beiträge und Profilbilder der Accounts in data/accounts-list.txt
+# Start: automatisch nach einer Änderung der Liste, jeden Montag, oder von Hand unter «Actions».
+on:
+  push:
+    paths:
+      - data/accounts-list.txt
+      - scripts/update_accounts.py
+      - .github/workflows/update-accounts.yml
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-accounts
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pillow
+      - run: python scripts/update_accounts.py
+      - name: Änderungen speichern
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add data/accounts.json img/accounts
+          if git diff --cached --quiet; then
+            echo "Keine Änderungen."
+          else
+            git commit -m "Accounts aktualisiert"
+            git pull --rebase
+            git push
+          fi
