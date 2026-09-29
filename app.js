@@ -60,6 +60,11 @@ function parseHandle(input) {
   return { handle: s, platform };
 }
 
+const CRIT = {
+  followers: { label: 'Follower', more: 'mehr Followern', less: 'weniger Follower' },
+  posts: { label: 'Beiträge', more: 'mehr Beiträgen', less: 'weniger Beiträge' }
+};
+
 /* ---------------- Profile ---------------- */
 let profiles = load(STORE_PROFILES, []);
 let editingId = null;
@@ -92,13 +97,16 @@ const platName = p => p === 'tiktok' ? 'TikTok' : 'Instagram';
 
 function renderProfiles() {
   const list = $('#profile-list');
-  list.innerHTML = profiles.map(p => `
+  const q = $('#search').value.trim().toLowerCase().replace(/^@/, '');
+  $('#search').hidden = profiles.length <= MAX;
+  const shown = q ? profiles.filter(p => (p.handle + ' ' + (p.name || '')).toLowerCase().includes(q)) : profiles;
+  list.innerHTML = shown.map(p => `
     <li data-id="${p.id}" class="${p.sel ? '' : 'off'}">
       <input type="checkbox" class="chk" ${p.sel ? 'checked' : ''} aria-label="Im Turnier">
       ${avatarHTML(p)}
       <div class="info">
         <b>@${esc(p.handle)} <span class="plat ${p.platform}">${platLabel(p.platform)}</span></b>
-        <span>${p.name ? esc(p.name) + ' · ' : ''}${fmtCount(p.followers)} Follower</span>
+        <span>${p.name ? esc(p.name) + ' · ' : ''}${fmtCount(p.followers)} Follower${p.posts != null ? ' · ' + fmtCount(p.posts) + ' Beiträge' : ''}</span>
       </div>
       <div class="acts">
         <button class="icon-btn" data-act="edit" aria-label="Bearbeiten">✏️</button>
@@ -159,7 +167,10 @@ function initProfileView() {
     const followers = parseCount($('#f-followers').value);
     if (!handle) return toast('Bitte einen Benutzernamen eingeben.', 'err');
     if (isNaN(followers)) return toast('Bitte eine gültige Follower-Zahl eingeben.', 'err');
-    const data = { platform: form.platform.value, handle, name: $('#f-name').value.trim(), followers, img: formImg };
+    const postsRaw = $('#f-posts').value.trim();
+    const posts = postsRaw ? parseCount(postsRaw) : null;
+    if (postsRaw && isNaN(posts)) return toast('Bitte eine gültige Anzahl Beiträge eingeben.', 'err');
+    const data = { platform: form.platform.value, handle, name: $('#f-name').value.trim(), followers, posts, img: formImg };
     if (editingId) {
       Object.assign(profiles.find(p => p.id === editingId), data);
       toast('Profil gespeichert.', 'ok');
@@ -212,6 +223,7 @@ function initProfileView() {
       $('#f-handle').value = '@' + p.handle;
       $('#f-name').value = p.name || '';
       $('#f-followers').value = p.followers;
+      $('#f-posts').value = p.posts != null ? p.posts : '';
       $('#form-title').textContent = `@${p.handle} bearbeiten`;
       $('#f-submit').textContent = '✓ Speichern';
       $('#f-cancel').hidden = false;
@@ -235,25 +247,18 @@ function initProfileView() {
     toast(`${ok} Profil(e) eingefügt.` + (bad.length ? ` ${bad.length} Zeile(n) nicht verstanden (stehen noch im Feld).` : ''), bad.length ? 'err' : 'ok');
   });
 
-  $('#load-examples').addEventListener('click', () => {
-    const ex = [
-      ['instagram', 'alpen.skaterin', 'Mila (Beispiel)', 48200],
-      ['tiktok', 'kochkatze', 'Kochkatze (Beispiel)', 1240000],
-      ['instagram', 'mathe.mia', 'Mia (Beispiel)', 312000],
-      ['tiktok', 'dj_limmat', 'DJ Limmat (Beispiel)', 875000],
-      ['instagram', 'velo.vik', 'Vik (Beispiel)', 9400],
-      ['tiktok', 'lachkrampf.ch', 'Lachkrampf (Beispiel)', 2310000],
-      ['instagram', 'pixel.paul', 'Paul (Beispiel)', 156000],
-      ['tiktok', 'tanz.tina', 'Tina (Beispiel)', 63700],
-    ];
-    let added = 0;
-    for (const [platform, handle, name, followers] of ex) {
-      if (profiles.some(p => p.handle === handle)) continue;
-      addProfile({ platform, handle, name, followers }); added++;
-    }
+  $('#load-popular').addEventListener('click', loadPopular);
+  $('#pick-random').addEventListener('click', () => {
+    const q = $('#search').value.trim().toLowerCase().replace(/^@/, '');
+    const pool = q ? profiles.filter(p => (p.handle + ' ' + (p.name || '')).toLowerCase().includes(q)) : profiles;
+    if (pool.length < 2) return toast('Es braucht mindestens 2 Profile.', 'err');
+    profiles.forEach(p => { p.sel = false; });
+    shuffle(pool.slice()).slice(0, MAX).forEach(p => { p.sel = true; });
     saveProfiles(); renderProfiles();
-    toast(added ? `${added} erfundene Beispielprofile geladen.` : 'Die Beispiele sind schon geladen.', 'ok');
+    toast(`${Math.min(MAX, pool.length)} Profile zufällig gewählt.`, 'ok');
   });
+  $('#clear-sel').addEventListener('click', () => { profiles.forEach(p => { p.sel = false; }); saveProfiles(); renderProfiles(); });
+  $('#search').addEventListener('input', renderProfiles);
 
   $('#clear-all').addEventListener('click', () => {
     if (!profiles.length) return;
@@ -289,6 +294,32 @@ function parseLine(line) {
   return { platform: platform || 'instagram', handle, followers };
 }
 
+/* Beliebte Accounts aus data/accounts.json (von der GitHub Action aktualisiert) */
+async function loadPopular() {
+  let data;
+  try {
+    const r = await fetch('data/accounts.json', { cache: 'no-cache' });
+    if (!r.ok) throw new Error(r.status);
+    data = await r.json();
+  } catch (e) {
+    return toast('Die Liste der beliebten Accounts konnte nicht geladen werden.', 'err');
+  }
+  const noneSelected = !profiles.some(p => p.sel);
+  let added = 0, updated = 0;
+  for (const acc of data.accounts || []) {
+    if (acc.followers == null) continue;
+    const p = profiles.find(x => x.platform === acc.platform && x.handle.toLowerCase() === acc.handle.toLowerCase());
+    const fields = { name: acc.name || '', followers: acc.followers, posts: acc.posts ?? null };
+    if (acc.img) fields.img = acc.img;
+    if (p) { Object.assign(p, fields); updated++; }
+    else { profiles.push({ id: uid(), platform: acc.platform, handle: acc.handle, img: null, ...fields, sel: false }); added++; }
+  }
+  if (noneSelected) shuffle(profiles.slice()).slice(0, MAX).forEach(p => { p.sel = true; });
+  saveProfiles(); renderProfiles();
+  const stand = data.updated ? ` (Stand ${data.updated.split('-').reverse().join('.')})` : '';
+  toast(`${added} Accounts geladen, ${updated} aktualisiert${stand}.` + (noneSelected ? ' 8 davon sind zufällig fürs Turnier gewählt.' : ''), 'ok', 4000);
+}
+
 /* Set als Link teilen (ohne Bilder) */
 function b64encode(str) { return btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
 function b64decode(str) { str = str.replace(/-/g, '+').replace(/_/g, '/'); return decodeURIComponent(escape(atob(str))); }
@@ -296,7 +327,7 @@ function b64decode(str) { str = str.replace(/-/g, '+').replace(/_/g, '/'); retur
 function shareSet() {
   const sel = selectedProfiles();
   if (!sel.length) return toast('Wähle zuerst Profile für das Turnier aus.', 'err');
-  const data = sel.map(p => [p.platform === 'tiktok' ? 't' : 'i', p.handle, p.followers, p.name || '']);
+  const data = sel.map(p => [p.platform === 'tiktok' ? 't' : 'i', p.handle, p.followers, p.name || '', p.posts ?? null]);
   const url = location.href.split('#')[0] + '#set=' + b64encode(JSON.stringify(data));
   const done = () => toast('Link kopiert. Andere können damit dieselben Profile laden.', 'ok');
   if (navigator.share) {
@@ -319,8 +350,8 @@ function importFromHash() {
   if (!items.length) return;
   confirmModal('Profile übernehmen?', `Mit dem Link wurden ${items.length} Profile geteilt. Sollen sie deine aktuelle Liste ersetzen?`, 'Übernehmen', () => {
     profiles = [];
-    for (const [pl, handle, followers, name] of items) {
-      addProfile({ platform: pl === 't' ? 'tiktok' : 'instagram', handle: parseHandle(handle).handle, followers: Number(followers), name: String(name || '') });
+    for (const [pl, handle, followers, name, posts] of items) {
+      addProfile({ platform: pl === 't' ? 'tiktok' : 'instagram', handle: parseHandle(handle).handle, followers: Number(followers), posts: isFinite(posts) && posts !== null ? Number(posts) : null, name: String(name || '') });
     }
     saveProfiles(); renderProfiles(); game = null; store(STORE_GAME, null);
     toast('Profile übernommen.', 'ok');
@@ -406,9 +437,12 @@ const levelOf = i => (i === 0 ? 0 : i < 3 ? 1 : i < 7 ? 2 : 3);
 function newGame() {
   const sel = selectedProfiles();
   const cards = {};
-  for (const p of sel) cards[p.id] = { id: p.id, platform: p.platform, handle: p.handle, name: p.name, followers: p.followers, img: p.img };
+  for (const p of sel) cards[p.id] = { id: p.id, platform: p.platform, handle: p.handle, name: p.name, followers: p.followers, posts: p.posts ?? null, img: p.img };
   const ids = shuffle(sel.map(p => p.id));
+  let crit = (game && game.crit) || 'followers';
+  if (crit === 'posts' && sel.some(p => p.posts == null)) crit = 'followers';
   game = {
+    crit,
     sig: signature(),
     cards,
     n: ids.length,
@@ -422,7 +456,7 @@ function newGame() {
   selected = null;
   saveGame();
 }
-function signature() { return selectedProfiles().map(p => `${p.id}:${p.followers}:${p.handle}:${p.platform}:${p.img ? p.img.length : 0}`).join('|'); }
+function signature() { return selectedProfiles().map(p => `${p.id}:${p.followers}:${p.posts}:${p.handle}:${p.platform}:${p.img ? p.img.length : 0}`).join('|'); }
 function saveGame() { if (game) store(STORE_GAME, game); }
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
@@ -435,7 +469,9 @@ function locOf(id) {
   return null;
 }
 const card = id => game.cards[id];
-const who = c => `@${c.handle} (${fmtCount(c.followers)})`;
+const crit = () => CRIT[game.crit || 'followers'];
+const val = c => c[game.crit || 'followers'] ?? 0;
+const who = c => `@${c.handle} (${fmtCount(val(c))} ${crit().label})`;
 
 function subtreeEmpty(i) {
   if (i >= 15) return true;
@@ -443,7 +479,7 @@ function subtreeEmpty(i) {
   return subtreeEmpty(2 * i + 1) && subtreeEmpty(2 * i + 2);
 }
 // Gewinnt a gegen b? Gleichstand (auch gleich angezeigte Zahlen) zählt für beide.
-function beats(a, b) { return a.followers >= b.followers || fmtCount(a.followers) === fmtCount(b.followers); }
+function beats(a, b) { return val(a) >= val(b) || fmtCount(val(a)) === fmtCount(val(b)); }
 
 function snapshot() {
   game.hist.push(JSON.stringify({ tree: game.tree, rank: game.rank, bench: game.bench, phase: game.phase, comparisons: game.comparisons, log: game.log }));
@@ -510,7 +546,7 @@ function tryMove(id, to, auto = false) {
   const a = card(id);
   if (sid) {
     const b = card(sid);
-    if (!beats(a, b)) return fail(id, `Zweikampf verloren: ${who(a)} hat weniger Follower als ${who(b)}. Die Siegerkarte steigt auf.`, sid);
+    if (!beats(a, b)) return fail(id, `Zweikampf verloren: ${who(a)} hat ${crit().less} als ${who(b)}. Die Siegerkarte steigt auf.`, sid);
     snapshot();
     game.comparisons++;
     game.tree[p] = id; game.tree[fi] = null;
@@ -718,13 +754,13 @@ function relayout() {
   for (const [id, el] of cardEls) if (!game.cards[id]) { el.remove(); cardEls.delete(id); }
   for (const c of Object.values(game.cards)) {
     let el = cardEls.get(c.id);
-    const sig = `${c.handle}|${c.followers}|${c.platform}|${c.img ? c.img.length : 0}`;
+    const sig = `${game.crit}|${val(c)}|${c.handle}|${c.followers}|${c.platform}|${c.img ? c.img.length : 0}`;
     if (!el || el.dataset.sig !== sig) {
       if (el) el.remove();
       el = document.createElement('div');
       el.className = 'card';
       el.dataset.id = c.id; el.dataset.sig = sig;
-      el.innerHTML = `<span class="plat ${c.platform}">${platLabel(c.platform)}</span>${avatarHTML(c)}<div class="h">@${esc(c.handle)}</div><div class="f">${fmtCount(c.followers)}</div>`;
+      el.innerHTML = `<span class="plat ${c.platform}">${platLabel(c.platform)}</span>${avatarHTML(c)}<div class="h">@${esc(c.handle)}</div><div class="f">${fmtCount(val(c))}<small>${crit().label}</small></div>`;
       el.style.transition = 'none';
       wrap.appendChild(el); cardEls.set(c.id, el);
       requestAnimationFrame(() => { el.style.transition = ''; });
@@ -752,6 +788,7 @@ function updateGameUI() {
   $('#toolbar-setup').hidden = !setup;
   $('#toolbar-play').hidden = setup;
   $('#btn-start').disabled = game.bench.some(Boolean);
+  $$('#crit .btn').forEach(b => b.classList.toggle('on', b.dataset.crit === (game.crit || 'followers')));
   $('#st-comp').textContent = `Vergleiche: ${game.comparisons}`;
   $('#st-err').textContent = `Fehler: ${game.mistakes}`;
   $('#btn-hint').disabled = $('#btn-step').disabled = game.phase !== 'play';
@@ -766,7 +803,7 @@ function updateGameUI() {
   } else if (game.tree[0]) {
     text = 'Eine Karte ist bei «Rang» angekommen. Setze sie auf den nächsten freien Platz der Rangliste.';
   } else {
-    text = 'Lass immer zwei Karten gegeneinander antreten: Die Karte mit mehr Followern steigt eine Ebene auf.';
+    text = `Lass immer zwei Karten gegeneinander antreten: Die Karte mit ${crit().more} steigt eine Ebene auf.`;
   }
   $('#instruction').textContent = text;
 }
@@ -901,6 +938,14 @@ function init() {
   initProfileView();
   initBoard();
   $('#btn-shuffle').addEventListener('click', shuffleOntoLeaves);
+  $$('#crit .btn').forEach(b => b.addEventListener('click', () => {
+    const c = b.dataset.crit;
+    if (game.phase !== 'setup') return;
+    if (c === 'posts' && Object.values(game.cards).some(x => x.posts == null)) {
+      return toast('Nicht bei allen Karten ist die Anzahl Beiträge bekannt. Ergänze sie unter «1. Profile».', 'err', 4000);
+    }
+    game.crit = c; saveGame(); relayout();
+  }));
   $('#btn-start').addEventListener('click', startTournament);
   $('#btn-undo').addEventListener('click', undo);
   $('#btn-hint').addEventListener('click', () => hint(false));

@@ -44,8 +44,17 @@ def read_list():
     return items
 
 
-def fetch_instagram(handle):
-    url = "https://i.instagram.com/api/v1/users/web_profile_info/?username=" + urllib.parse.quote(handle)
+def parse_en_count(txt):
+    """«670M», «1.2K», «3,925» -> int"""
+    txt = txt.strip().replace(",", "")
+    mult = {"K": 1e3, "M": 1e6, "B": 1e9}.get(txt[-1:].upper(), 1)
+    if mult > 1:
+        txt = txt[:-1]
+    return int(round(float(txt) * mult))
+
+
+def instagram_api(handle, host):
+    url = f"https://{host}/api/v1/users/web_profile_info/?username=" + urllib.parse.quote(handle)
     data = json.loads(http_get(url, {"x-ig-app-id": "936619743392459", "Accept": "application/json"}))
     u = data["data"]["user"]
     return {
@@ -54,6 +63,39 @@ def fetch_instagram(handle):
         "posts": u["edge_owner_to_timeline_media"]["count"],
         "pic": u.get("profile_pic_url_hd") or u.get("profile_pic_url"),
     }
+
+
+def instagram_meta(handle):
+    """Liest die Vorschau-Daten, die Instagram für Link-Vorschauen ausliefert (Zahlen gerundet)."""
+    html = http_get(
+        f"https://www.instagram.com/{urllib.parse.quote(handle)}/",
+        {"User-Agent": "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
+         "Accept-Language": "en-US,en;q=0.9"},
+    ).decode("utf-8", "replace")
+    html = html.replace("&quot;", '"').replace("&#064;", "@").replace("&amp;", "&")
+    m = re.search(r"([\d.,]+[KMB]?) Followers, [\d.,]+[KMB]? Following, ([\d.,]+[KMB]?) Posts", html)
+    if not m:
+        raise ValueError("keine Zahlen in der Vorschau")
+    name = re.search(r'<meta property="og:title" content="([^"(]*?)\s*\(@', html)
+    pic = re.search(r'<meta property="og:image" content="([^"]+)"', html)
+    return {
+        "name": name.group(1).strip() if name else "",
+        "followers": parse_en_count(m.group(1)),
+        "posts": parse_en_count(m.group(2)),
+        "pic": pic.group(1) if pic else None,
+    }
+
+
+def fetch_instagram(handle):
+    errors = []
+    for fn in (lambda: instagram_api(handle, "i.instagram.com"),
+               lambda: instagram_api(handle, "www.instagram.com"),
+               lambda: instagram_meta(handle)):
+        try:
+            return fn()
+        except Exception as e:  # noqa: BLE001
+            errors.append(str(e))
+    raise RuntimeError(" | ".join(errors))
 
 
 def fetch_tiktok(handle):

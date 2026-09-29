@@ -25,7 +25,7 @@
 <main id="view-profiles" class="view active">
   <section class="intro">
     <p>Sammle <strong>2 bis 8</strong> Instagram- oder TikTok-Profile. Die Karten treten danach im Turnier gegeneinander an:
-      <strong>Wer mehr Follower hat, gewinnt den Zweikampf.</strong></p>
+      <strong>Wer mehr Follower (oder Beiträge) hat, gewinnt den Zweikampf.</strong></p>
   </section>
 
   <div class="cols">
@@ -45,6 +45,9 @@
         <label class="field">Anzahl Follower
           <input id="f-followers" name="followers" placeholder="z. B. 1,2 Mio. oder 45.3K oder 812" required>
           <small id="f-followers-preview" class="muted">So wie es in der App steht, z. B. «1,2 Mio.» oder «45,3K».</small>
+        </label>
+        <label class="field">Anzahl Beiträge <span class="muted">(freiwillig)</span>
+          <input id="f-posts" name="posts" placeholder="z. B. 1'234">
         </label>
         <div class="field">Profilbild <span class="muted">(freiwillig)</span>
           <div class="img-row">
@@ -80,10 +83,13 @@ https://www.tiktok.com/@name3 12'400</pre>
         <h2>Deine Profile</h2>
         <span id="sel-count" class="badge">0/8 im Turnier</span>
       </div>
+      <input id="search" class="search" type="search" placeholder="🔍 Suchen …" autocapitalize="none" spellcheck="false" hidden>
       <ul id="profile-list" class="plist"></ul>
-      <p id="empty-hint" class="muted center">Noch keine Profile. Füge links welche hinzu oder lade die Beispiele.</p>
+      <p id="empty-hint" class="muted center">Noch keine Profile. Füge links welche hinzu oder lade die beliebten Accounts (⭐).</p>
       <div class="list-actions">
-        <button type="button" class="btn ghost small" id="load-examples">Beispielprofile laden</button>
+        <button type="button" class="btn small" id="load-popular">⭐ Beliebte Accounts laden</button>
+        <button type="button" class="btn ghost small" id="pick-random">🎲 8 zufällig wählen</button>
+        <button type="button" class="btn ghost small" id="clear-sel">Auswahl leeren</button>
         <button type="button" class="btn ghost small" id="share-set">🔗 Als Link teilen</button>
         <button type="button" class="btn ghost small danger" id="clear-all">Alle löschen</button>
       </div>
@@ -99,6 +105,11 @@ https://www.tiktok.com/@name3 12'400</pre>
     <div class="stats"><span id="st-comp">Vergleiche: 0</span><span id="st-err">Fehler: 0</span></div>
   </div>
   <div class="toolbar" id="toolbar-setup">
+    <div class="crit" id="crit" role="radiogroup" aria-label="Sortieren nach">
+      <span>Sortieren nach:</span>
+      <button class="btn small" data-crit="followers">Follower</button>
+      <button class="btn small" data-crit="posts">Beiträge</button>
+    </div>
     <button class="btn" id="btn-shuffle">🔀 Zufällig hinlegen</button>
     <button class="btn primary" id="btn-start" disabled>Turnier starten ➜</button>
   </div>
@@ -122,11 +133,11 @@ https://www.tiktok.com/@name3 12'400</pre>
   <section class="panel prose">
     <h2>So funktioniert der Tournamentsort</h2>
     <p>Der Tournamentsort (Turniersortieren) funktioniert wie ein Sportturnier: Treten zwei Karten gegeneinander an,
-      kommt die <strong>Siegerkarte</strong> (mehr Follower) eine Ebene weiter nach oben. Die Verlierer scheiden aber nicht aus.
+      kommt die <strong>Siegerkarte</strong> (mehr Follower bzw. Beiträge) eine Ebene weiter nach oben. Die Verlierer scheiden aber nicht aus.
       Sie treten später wieder an, bis alle Karten in der Rangliste sind.</p>
     <ol>
       <li><strong>Karten hinlegen:</strong> Lege alle Karten in die unterste Reihe des Turnierbaums. Tippe dann auf «Turnier starten».</li>
-      <li><strong>Zweikampf:</strong> Zwei Karten nebeneinander bilden ein Paar. Die Karte mit mehr Followern steigt auf das Feld direkt darüber.</li>
+      <li><strong>Zweikampf:</strong> Zwei Karten nebeneinander bilden ein Paar. Die Karte mit mehr Followern (bzw. Beiträgen) steigt auf das Feld direkt darüber.</li>
       <li><strong>Nachrücken:</strong> Auf frei gewordene Plätze rücken von unten Karten nach, unten beginnend.</li>
       <li><strong>Kein Gegner:</strong> Ist neben einer Karte kein Gegner mehr da (und kommt auch keiner mehr nach), rückt sie ohne Zweikampf nach oben.</li>
       <li><strong>Rang:</strong> Die Karte im Feld «Rang» kommt auf den nächsten freien Platz der Rangliste (Platz 1, dann 2, …).</li>
@@ -139,7 +150,9 @@ https://www.tiktok.com/@name3 12'400</pre>
       <li>«💡 Tipp» zeigt einen möglichen nächsten Zug. «▶ Schritt zeigen» führt ihn aus.</li>
     </ul>
     <h3>Follower herausfinden</h3>
-    <p>Öffne das Profil in der Instagram- oder TikTok-App und schreibe die Zahl ab, die bei «Follower» steht.
+    <p>Mit «⭐ Beliebte Accounts laden» bekommst du rund 50 bekannte Accounts mit Follower-Zahl, Anzahl Beiträge und Profilbild.
+      Diese Zahlen werden einmal pro Woche automatisch aktualisiert.</p>
+    <p>Eigene Accounts: Öffne das Profil in der Instagram- oder TikTok-App und schreibe die Zahlen ab, die bei «Follower» und «Beiträge» stehen.
       Für das Profilbild kannst du einen Screenshot machen und ihn danach zuschneiden.
       Die Daten bleiben nur auf deinem Gerät gespeichert.</p>
     <h3>Nachdenken</h3>
