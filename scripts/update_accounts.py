@@ -39,8 +39,10 @@ def read_list():
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        platform, handle = line.split()[:2]
-        items.append((platform.lower(), handle.lstrip("@")))
+        parts = line.split()
+        platform, handle = parts[0].lower(), parts[1].lstrip("@")
+        manual = [int(x.replace("'", "").replace("’", "")) for x in parts[2:4]]
+        items.append((platform, handle, manual))
     return items
 
 
@@ -133,7 +135,7 @@ def main():
 
     today = datetime.date.today().isoformat()
     result, ok, failed = [], 0, []
-    for platform, handle in read_list():
+    for platform, handle, manual in read_list():
         key = (platform, handle.lower())
         entry = dict(old.get(key, {"platform": platform, "handle": handle, "name": "", "followers": None, "posts": None, "img": None}))
         entry["platform"], entry["handle"] = platform, handle
@@ -146,8 +148,12 @@ def main():
             ok += 1
             print(f"OK   {platform:9} @{handle}: {info['followers']} Follower, {info['posts']} Beiträge")
         except Exception as e:  # noqa: BLE001
-            failed.append(f"{platform} @{handle}")
-            print(f"FAIL {platform:9} @{handle}: {e}")
+            if manual:
+                entry.update(followers=manual[0], posts=manual[1] if len(manual) > 1 else None)
+                print(f"HAND {platform:9} @{handle}: Werte aus der Liste ({e})")
+            else:
+                failed.append(f"{platform} @{handle}")
+                print(f"FAIL {platform:9} @{handle}: {e}")
 
         # Profilbild: zuerst direkt, sonst über unavatar.io
         for src in [pic, f"https://unavatar.io/{platform}/{urllib.parse.quote(handle)}?fallback=false"]:
