@@ -3,8 +3,8 @@
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-const STORE_PROFILES = 'tsort_profiles_v1';
-const STORE_GAME = 'tsort_game_v1';
+const STORE_SEL = 'tsort_selection_v2';
+const STORE_GAME = 'tsort_game_v2';
 const MAX = 32; // höchstens so viele Karten im Turnier
 
 function load(key, fallback) {
@@ -13,33 +13,9 @@ function load(key, fallback) {
 function store(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; }
 }
-const uid = () => Math.random().toString(36).slice(2, 10);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /* ---------------- Zahlen ---------------- */
-function parseCount(input) {
-  if (typeof input === 'number') return input;
-  let s = String(input || '').toLowerCase()
-    .replace(/follower(innen)?|abonnent(inn)?en|abonnenten|fans/g, '')
-    .replace(/[\s'’`  ]/g, '');
-  if (!s) return NaN;
-  const m = s.match(/^([0-9][0-9.,]*)(mrd|mia|b|mio|m|tsd|tausend|k)?\.?$/);
-  if (!m) return NaN;
-  let num = m[1];
-  const mult = { mrd: 1e9, mia: 1e9, b: 1e9, mio: 1e6, m: 1e6, tsd: 1e3, tausend: 1e3, k: 1e3 }[m[2]] || 1;
-  if (mult > 1) {
-    // "1.234,5 Mio" kommt kaum vor: Das letzte Trennzeichen ist das Dezimalzeichen
-    const last = Math.max(num.lastIndexOf('.'), num.lastIndexOf(','));
-    if (last >= 0) num = num.slice(0, last).replace(/[.,]/g, '') + '.' + num.slice(last + 1);
-    const v = parseFloat(num);
-    return isNaN(v) ? NaN : Math.round(v * mult);
-  }
-  if (/^\d{1,3}([.,]\d{3})+$/.test(num)) return parseInt(num.replace(/[.,]/g, ''), 10);
-  if (/^\d+$/.test(num)) return parseInt(num, 10);
-  const v = parseFloat(num.replace(',', '.'));
-  return isNaN(v) ? NaN : Math.round(v);
-}
-
 function fmtCount(n) {
   const f = (v, d) => {
     const r = Math.round(v * 10 ** d) / 10 ** d;
@@ -51,29 +27,18 @@ function fmtCount(n) {
   return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '’');
 }
 
-function parseHandle(input) {
-  let s = String(input || '').trim();
-  let platform = null;
-  const m = s.match(/(instagram\.com|tiktok\.com)\/@?([A-Za-z0-9._]+)/i);
-  if (m) { platform = /insta/i.test(m[1]) ? 'instagram' : 'tiktok'; s = m[2]; }
-  s = s.replace(/^@+/, '').replace(/[^A-Za-z0-9._]/g, '');
-  return { handle: s, platform };
-}
-
 const CRIT = {
   followers: { label: 'Follower', more: 'mehr Followern', fewer: 'weniger Followern', lessN: 'weniger Follower', moreN: 'mehr Follower' },
   posts: { label: 'Beiträge', more: 'mehr Beiträgen', fewer: 'weniger Beiträgen', lessN: 'weniger Beiträge', moreN: 'mehr Beiträge' }
 };
 
-/* ---------------- Profile ---------------- */
-let profiles = load(STORE_PROFILES, []);
-let editingId = null;
-let formImg = null;
+/* ---------------- Accounts ---------------- */
+// Die Accounts kommen aus data/accounts.json (von der GitHub Action wöchentlich aktualisiert).
+let profiles = [];
+let selectedIds = new Set(load(STORE_SEL, []));
 
-function saveProfiles() {
-  if (!store(STORE_PROFILES, profiles)) toast('Der Speicher ist voll. Entferne einige Profilbilder.', 'err');
-}
-function selectedProfiles() { return profiles.filter(p => p.sel).slice(0, MAX); }
+function saveSelection() { store(STORE_SEL, [...selectedIds]); }
+function selectedProfiles() { return profiles.filter(p => selectedIds.has(p.id)).slice(0, MAX); }
 
 function initials(p) {
   const base = (p.name || p.handle || '?').replace(/\(.*?\)/g, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim() || '?';
@@ -88,336 +53,87 @@ function avatarHTML(p, cls = '') {
   const style = `background:${colorFor(p.handle)}`;
   const ini = esc(initials(p));
   if (p.img) {
-    return `<div class="av ${cls}" style="${style}"><img src="${esc(p.img)}" alt="" draggable="false" onerror="this.parentNode.textContent='${ini}'"></div>`;
+    return `<div class="av ${cls}"><div class="av-in" style="${style}"><img src="${esc(p.img)}" alt="" draggable="false" loading="lazy" onerror="this.parentNode.textContent='${ini}'"></div></div>`;
   }
-  return `<div class="av ${cls}" style="${style}">${ini}</div>`;
+  return `<div class="av ${cls}"><div class="av-in" style="${style}">${ini}</div></div>`;
 }
 const platLabel = p => p === 'tiktok' ? 'TT' : 'IG';
-const platName = p => p === 'tiktok' ? 'TikTok' : 'Instagram';
+const norm = s => String(s).toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+const displayName = p => p.name ? p.name : '@' + p.handle;
+const showHandle = p => p.name && norm(p.name) !== norm(p.handle);
 
-function renderProfiles() {
-  const list = $('#profile-list');
-  const q = $('#search').value.trim().toLowerCase().replace(/^@/, '');
-  $('#search').hidden = profiles.length <= MAX;
-  const shown = q ? profiles.filter(p => (p.handle + ' ' + (p.name || '')).toLowerCase().includes(q)) : profiles;
-  list.innerHTML = shown.map(p => `
-    <li data-id="${p.id}" class="${p.sel ? '' : 'off'}">
-      <input type="checkbox" class="chk" ${p.sel ? 'checked' : ''} aria-label="Im Turnier">
-      ${avatarHTML(p)}
-      <div class="info">
-        <b>@${esc(p.handle)} <span class="plat ${p.platform}">${platLabel(p.platform)}</span></b>
-        <span>${p.name ? esc(p.name) + ' · ' : ''}${fmtCount(p.followers)} Follower${p.posts != null ? ' · ' + fmtCount(p.posts) + ' Beiträge' : ''}</span>
-      </div>
-      <div class="acts">
-        <button class="icon-btn" data-act="edit" aria-label="Bearbeiten">✏️</button>
-        <button class="icon-btn" data-act="del" aria-label="Löschen">🗑️</button>
-      </div>
-    </li>`).join('');
-  $('#empty-hint').hidden = profiles.length > 0;
-  const n = profiles.filter(p => p.sel).length;
-  const badge = $('#sel-count');
-  badge.textContent = `${n}/${MAX} im Turnier`;
-  badge.classList.toggle('full', n === MAX);
-  $('#go-game').disabled = n < 2;
-}
-
-function addProfile(data) {
-  const n = profiles.filter(p => p.sel).length;
-  const p = { id: uid(), platform: 'tiktok', name: '', img: null, ...data, sel: n < 8 };
-  profiles.push(p);
-  return p;
-}
-
-function resetForm() {
-  editingId = null; formImg = null;
-  $('#profile-form').reset();
-  $('#form-title').textContent = 'Profil hinzufügen';
-  $('#f-submit').textContent = '＋ Hinzufügen';
-  $('#f-cancel').hidden = true;
-  updateFollowerPreview();
-  updateFormImg();
-}
-function updateFormImg() {
-  const handle = parseHandle($('#f-handle').value).handle || '?';
-  $('#f-img-preview').outerHTML = avatarHTML({ handle, name: $('#f-name').value, img: formImg }, 'big').replace('class="av big"', 'id="f-img-preview" class="av big"');
-  $('#f-img-clear').hidden = !formImg;
-}
-function updateFollowerPreview() {
-  const el = $('#f-followers-preview');
-  const raw = $('#f-followers').value;
-  if (!raw.trim()) { el.className = 'muted'; el.textContent = 'So wie es in der App steht, z. B. «1,2 Mio.» oder «45,3K».'; return; }
-  const v = parseCount(raw);
-  if (isNaN(v)) { el.className = 'bad'; el.textContent = 'Diese Zahl verstehe ich nicht.'; }
-  else { el.className = 'good'; el.textContent = `✓ ${v.toLocaleString('de-CH')} Follower (${fmtCount(v)})`; }
-}
-
-function initProfileView() {
-  const form = $('#profile-form');
-  $('#f-handle').addEventListener('input', () => {
-    const { platform } = parseHandle($('#f-handle').value);
-    if (platform) form.platform.value = platform;
-    if (!formImg) updateFormImg();
-  });
-  $('#f-name').addEventListener('input', () => { if (!formImg) updateFormImg(); });
-  $('#f-followers').addEventListener('input', updateFollowerPreview);
-
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    const { handle } = parseHandle($('#f-handle').value);
-    const followers = parseCount($('#f-followers').value);
-    if (!handle) return toast('Bitte einen Benutzernamen eingeben.', 'err');
-    if (isNaN(followers)) return toast('Bitte eine gültige Follower-Zahl eingeben.', 'err');
-    const postsRaw = $('#f-posts').value.trim();
-    const posts = postsRaw ? parseCount(postsRaw) : null;
-    if (postsRaw && isNaN(posts)) return toast('Bitte eine gültige Anzahl Beiträge eingeben.', 'err');
-    const data = { platform: form.platform.value, handle, name: $('#f-name').value.trim(), followers, posts, img: formImg };
-    if (editingId) {
-      Object.assign(profiles.find(p => p.id === editingId), data);
-      toast('Profil gespeichert.', 'ok');
-    } else {
-      if (profiles.some(p => p.handle.toLowerCase() === handle.toLowerCase() && p.platform === data.platform)) {
-        return toast(`@${handle} ist schon in der Liste.`, 'err');
-      }
-      const p = addProfile(data);
-      toast(p.sel ? `@${handle} hinzugefügt.` : `@${handle} hinzugefügt. Setze das Häkchen, damit es im Turnier mitmacht.`, 'ok');
-    }
-    saveProfiles(); renderProfiles(); resetForm();
-  });
-  $('#f-cancel').addEventListener('click', resetForm);
-
-  $('#f-file').addEventListener('change', e => {
-    const file = e.target.files[0];
-    e.target.value = '';
-    if (file) openCropper(file, data => { formImg = data; updateFormImg(); });
-  });
-  $('#f-web').addEventListener('click', () => {
-    const { handle } = parseHandle($('#f-handle').value);
-    if (!handle) return toast('Gib zuerst den Benutzernamen ein.', 'err');
-    const url = `https://unavatar.io/${form.platform.value}/${encodeURIComponent(handle)}?fallback=false`;
-    toast('Bild wird gesucht …');
-    const img = new Image();
-    img.onload = () => { formImg = url; updateFormImg(); toast('Bild gefunden.', 'ok'); };
-    img.onerror = () => toast('Kein Bild gefunden. Mach einen Screenshot vom Profil und wähle ihn mit 📷 aus.', 'err');
-    img.src = url;
-  });
-  $('#f-img-clear').addEventListener('click', () => { formImg = null; updateFormImg(); });
-
-  $('#profile-list').addEventListener('click', e => {
-    const li = e.target.closest('li'); if (!li) return;
-    const p = profiles.find(x => x.id === li.dataset.id); if (!p) return;
-    if (e.target.classList.contains('chk')) {
-      if (e.target.checked && profiles.filter(x => x.sel).length >= MAX) {
-        e.target.checked = false;
-        return toast(`Es können höchstens ${MAX} Profile ins Turnier. Entferne zuerst ein anderes Häkchen.`, 'err');
-      }
-      p.sel = e.target.checked; saveProfiles(); renderProfiles(); return;
-    }
-    const act = e.target.closest('[data-act]')?.dataset.act;
-    if (act === 'del') {
-      profiles = profiles.filter(x => x !== p);
-      if (editingId === p.id) resetForm();
-      saveProfiles(); renderProfiles();
-    } else if (act === 'edit') {
-      editingId = p.id; formImg = p.img || null;
-      form.platform.value = p.platform;
-      $('#f-handle').value = '@' + p.handle;
-      $('#f-name').value = p.name || '';
-      $('#f-followers').value = p.followers;
-      $('#f-posts').value = p.posts != null ? p.posts : '';
-      $('#form-title').textContent = `@${p.handle} bearbeiten`;
-      $('#f-submit').textContent = '✓ Speichern';
-      $('#f-cancel').hidden = false;
-      updateFollowerPreview(); updateFormImg();
-      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  });
-
-  $('#bulk-add').addEventListener('click', () => {
-    const lines = $('#bulk').value.split(/\n+/).map(l => l.trim()).filter(Boolean);
-    let ok = 0; const bad = [];
-    for (const line of lines) {
-      const r = parseLine(line);
-      if (!r) { bad.push(line); continue; }
-      if (profiles.some(p => p.handle.toLowerCase() === r.handle.toLowerCase() && p.platform === r.platform)) continue;
-      addProfile(r); ok++;
-    }
-    saveProfiles(); renderProfiles();
-    if (!bad.length) $('#bulk').value = '';
-    else $('#bulk').value = bad.join('\n');
-    toast(`${ok} Profil(e) eingefügt.` + (bad.length ? ` ${bad.length} Zeile(n) nicht verstanden (stehen noch im Feld).` : ''), bad.length ? 'err' : 'ok');
-  });
-
-  $('#load-popular').addEventListener('click', loadPopular);
-  $$('#pick-random [data-n]').forEach(b => b.addEventListener('click', () => {
-    const N = +b.dataset.n;
-    const q = $('#search').value.trim().toLowerCase().replace(/^@/, '');
-    const pool = q ? profiles.filter(p => (p.handle + ' ' + (p.name || '')).toLowerCase().includes(q)) : profiles;
-    if (pool.length < 2) return toast('Es braucht mindestens 2 Profile.', 'err');
-    profiles.forEach(p => { p.sel = false; });
-    shuffle(pool.slice()).slice(0, N).forEach(p => { p.sel = true; });
-    saveProfiles(); renderProfiles();
-    toast(`${Math.min(N, pool.length)} Profile zufällig gewählt.`, 'ok');
-  }));
-  $('#clear-sel').addEventListener('click', () => { profiles.forEach(p => { p.sel = false; }); saveProfiles(); renderProfiles(); });
-  $('#search').addEventListener('input', renderProfiles);
-
-  $('#clear-all').addEventListener('click', () => {
-    if (!profiles.length) return;
-    confirmModal('Alle Profile löschen?', 'Die Liste wird geleert. Das kann nicht rückgängig gemacht werden.', 'Löschen', () => {
-      profiles = []; saveProfiles(); renderProfiles(); resetForm();
-    });
-  });
-
-  $('#share-set').addEventListener('click', shareSet);
-  $('#go-game').addEventListener('click', () => showView('game'));
-  resetForm();
-  renderProfiles();
-}
-
-function parseLine(line) {
-  const tokens = line.split(/[\s;|\t]+/).filter(Boolean);
-  let platform = null, handle = null;
-  const rest = [];
-  for (const t of tokens) {
-    const low = t.toLowerCase();
-    if (!platform && /^(instagram|insta|ig|tiktok|tt)[:]?$/.test(low)) { platform = low.startsWith('t') ? 'tiktok' : 'instagram'; continue; }
-    if (!handle && (t.startsWith('@') || /\.com\//i.test(t))) {
-      const r = parseHandle(t); handle = r.handle; platform = platform || r.platform; continue;
-    }
-    rest.push(t);
-  }
-  if (!handle) {
-    const i = rest.findIndex(t => /[a-z_]/i.test(t) && isNaN(parseCount(t)));
-    if (i >= 0) handle = parseHandle(rest.splice(i, 1)[0]).handle;
-  }
-  const followers = parseCount(rest.join(''));
-  if (!handle || isNaN(followers)) return null;
-  return { platform: platform || 'instagram', handle, followers };
-}
-
-/* Beliebte Accounts aus data/accounts.json (von der GitHub Action aktualisiert) */
-async function loadPopular() {
-  let data;
+async function loadAccounts() {
   try {
     const r = await fetch('data/accounts.json', { cache: 'no-cache' });
     if (!r.ok) throw new Error(r.status);
-    data = await r.json();
+    const data = await r.json();
+    profiles = (data.accounts || [])
+      .filter(a => a.followers > 0)
+      .map(a => ({ id: `${a.platform}_${a.handle}`, platform: a.platform, handle: a.handle, name: a.name || '', followers: a.followers, posts: a.posts ?? 0, img: a.img || null }))
+      .sort((a, b) => displayName(a).localeCompare(displayName(b), 'de', { sensitivity: 'base' }));
+    if (data.updated) $('#data-date').textContent = `Stand ${data.updated.split('-').reverse().join('.')} · ${profiles.length} Accounts`;
   } catch (e) {
-    return toast('Die Liste der beliebten Accounts konnte nicht geladen werden.', 'err');
+    $('#grid').innerHTML = '<p class="muted center">Die Accounts konnten nicht geladen werden. Lade die Seite neu.</p>';
+    return;
   }
-  const noneSelected = !profiles.some(p => p.sel);
-  let added = 0, updated = 0;
-  for (const acc of data.accounts || []) {
-    if (acc.followers == null) continue;
-    const p = profiles.find(x => x.platform === acc.platform && x.handle.toLowerCase() === acc.handle.toLowerCase());
-    const fields = { name: acc.name || '', followers: acc.followers, posts: acc.posts ?? null };
-    if (acc.img) fields.img = acc.img;
-    if (p) { Object.assign(p, fields); updated++; }
-    else { profiles.push({ id: uid(), platform: acc.platform, handle: acc.handle, img: null, ...fields, sel: false }); added++; }
-  }
-  if (noneSelected) shuffle(profiles.slice()).slice(0, 8).forEach(p => { p.sel = true; });
-  saveProfiles(); renderProfiles();
-  const stand = data.updated ? ` (Stand ${data.updated.split('-').reverse().join('.')})` : '';
-  toast(`${added} Accounts geladen, ${updated} aktualisiert${stand}.` + (noneSelected ? ' 8 davon sind zufällig fürs Turnier gewählt.' : ''), 'ok', 4000);
+  // nur Auswahl behalten, die es noch gibt; sonst 8 zufällig vorschlagen
+  selectedIds = new Set([...selectedIds].filter(id => profiles.some(p => p.id === id)));
+  if (!selectedIds.size) shuffle(profiles.slice()).slice(0, 8).forEach(p => selectedIds.add(p.id));
+  saveSelection();
+  renderGrid();
 }
 
-/* Set als Link teilen (ohne Bilder) */
-function b64encode(str) { return btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
-function b64decode(str) { str = str.replace(/-/g, '+').replace(/_/g, '/'); return decodeURIComponent(escape(atob(str))); }
+function renderGrid() {
+  const q = $('#search').value.trim().toLowerCase().replace(/^@/, '');
+  const shown = q ? profiles.filter(p => (p.handle + ' ' + p.name).toLowerCase().includes(q)) : profiles;
+  $('#grid').innerHTML = shown.map(p => `
+    <button type="button" class="tile${selectedIds.has(p.id) ? ' sel' : ''}" data-id="${esc(p.id)}" aria-pressed="${selectedIds.has(p.id)}">
+      <span class="check" aria-hidden="true">✓</span>
+      ${avatarHTML(p, 'big')}
+      <b class="tile-name">${esc(displayName(p))}</b>
+      <span class="tile-handle">${showHandle(p) ? '@' + esc(p.handle) : 'TikTok'}</span>
+      <span class="tile-stats">
+        <span><b>${fmtCount(p.followers)}</b><small>Follower</small></span>
+        <span><b>${fmtCount(p.posts)}</b><small>Beiträge</small></span>
+      </span>
+    </button>`).join('');
+  $('#grid-empty').hidden = shown.length > 0 || !profiles.length;
+  renderSelbar();
+}
 
-function shareSet() {
+function renderSelbar() {
   const sel = selectedProfiles();
-  if (!sel.length) return toast('Wähle zuerst Profile für das Turnier aus.', 'err');
-  const data = sel.map(p => [p.platform === 'tiktok' ? 't' : 'i', p.handle, p.followers, p.name || '', p.posts ?? null]);
-  const url = location.href.split('#')[0] + '#set=' + b64encode(JSON.stringify(data));
-  const done = () => toast('Link kopiert. Andere können damit dieselben Profile laden.', 'ok');
-  if (navigator.share) {
-    navigator.share({ title: 'Tournamentsort Profile', url }).catch(() => {});
-  } else if (navigator.clipboard) {
-    navigator.clipboard.writeText(url).then(done, () => prompt('Link kopieren:', url));
-  } else {
-    prompt('Link kopieren:', url);
-  }
+  const n = sel.length;
+  const leaves = n >= 2 ? leafCount(n) : 0;
+  $('#sel-count').innerHTML = n
+    ? `<b>${n}</b> ausgewählt${n >= 2 ? ` <span class="muted">· Baum mit ${leaves} Startplätzen</span>` : ''}`
+    : 'Noch nichts ausgewählt';
+  $('#sel-avatars').innerHTML = sel.slice(0, 6).map(p => avatarHTML(p, 'mini')).join('') + (n > 6 ? `<span class="more">+${n - 6}</span>` : '');
+  $('#go-game').disabled = n < 2;
 }
 
-function importFromHash() {
-  const m = location.hash.match(/#set=([A-Za-z0-9_-]+)/);
-  if (!m) return;
-  let data;
-  try { data = JSON.parse(b64decode(m[1])); } catch (e) { return; }
-  if (!Array.isArray(data)) return;
-  const items = data.filter(d => Array.isArray(d) && d[1] && isFinite(d[2])).slice(0, 30);
-  history.replaceState(null, '', location.pathname + location.search);
-  if (!items.length) return;
-  confirmModal('Profile übernehmen?', `Mit dem Link wurden ${items.length} Profile geteilt. Sollen sie deine aktuelle Liste ersetzen?`, 'Übernehmen', () => {
-    profiles = [];
-    for (const [pl, handle, followers, name, posts] of items) {
-      addProfile({ platform: pl === 't' ? 'tiktok' : 'instagram', handle: parseHandle(handle).handle, followers: Number(followers), posts: isFinite(posts) && posts !== null ? Number(posts) : null, name: String(name || '') });
+function initProfileView() {
+  $('#grid').addEventListener('click', e => {
+    const t = e.target.closest('.tile'); if (!t) return;
+    const id = t.dataset.id;
+    if (selectedIds.has(id)) selectedIds.delete(id);
+    else {
+      if (selectedIds.size >= MAX) return toast(`Es können höchstens ${MAX} Accounts ins Turnier.`, 'err');
+      selectedIds.add(id);
     }
-    saveProfiles(); renderProfiles(); game = null; store(STORE_GAME, null);
-    toast('Profile übernommen.', 'ok');
+    t.classList.toggle('sel', selectedIds.has(id));
+    t.setAttribute('aria-pressed', selectedIds.has(id));
+    saveSelection(); renderSelbar();
   });
-}
-
-/* ---------------- Bild zuschneiden ---------------- */
-function openCropper(file, cb) {
-  const url = URL.createObjectURL(file);
-  const img = new Image();
-  img.onload = () => {
-    const S = 280;
-    const body = $('#modal-body');
-    body.innerHTML = `<h2>Profilbild zuschneiden</h2>
-      <div class="crop-wrap">
-        <canvas width="${S * 2}" height="${S * 2}" style="width:${S}px;height:${S}px"></canvas>
-        <label>🔍 Zoom <input type="range" min="1" max="8" step="0.01" value="1"></label>
-        <p class="muted center" style="margin:0">Mit dem Finger verschieben, mit dem Regler vergrössern.</p>
-      </div>`;
-    const cv = $('canvas', body), ctx = cv.getContext('2d'), range = $('input', body);
-    const base = Math.max(S / img.width, S / img.height);
-    let zoom = 1, ox, oy;
-    const clamp = () => {
-      const w = img.width * base * zoom, h = img.height * base * zoom;
-      ox = Math.min(0, Math.max(S - w, ox)); oy = Math.min(0, Math.max(S - h, oy));
-    };
-    ox = (S - img.width * base) / 2; oy = (S - img.height * base) / 2;
-    const draw = (c = ctx, k = 2, overlay = true) => {
-      c.setTransform(k, 0, 0, k, 0, 0);
-      c.clearRect(0, 0, S, S);
-      c.drawImage(img, ox, oy, img.width * base * zoom, img.height * base * zoom);
-      if (overlay) {
-        c.fillStyle = 'rgba(0,0,0,.45)';
-        c.beginPath(); c.rect(0, 0, S, S); c.arc(S / 2, S / 2, S / 2 - 2, 0, Math.PI * 2, true); c.fill();
-      }
-    };
-    draw();
-    range.addEventListener('input', () => {
-      const cx = S / 2, cy = S / 2, nz = parseFloat(range.value);
-      ox = cx - (cx - ox) * nz / zoom; oy = cy - (cy - oy) * nz / zoom; zoom = nz;
-      clamp(); draw();
-    });
-    let drag = null;
-    cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, ox, oy }; cv.setPointerCapture(e.pointerId); });
-    cv.addEventListener('pointermove', e => {
-      if (!drag) return;
-      const r = S / cv.getBoundingClientRect().width;
-      ox = drag.ox + (e.clientX - drag.x) * r; oy = drag.oy + (e.clientY - drag.y) * r; clamp(); draw();
-    });
-    cv.addEventListener('pointerup', () => { drag = null; });
-    openModal([
-      { label: 'Abbrechen', cls: 'ghost', fn: () => URL.revokeObjectURL(url) },
-      {
-        label: '✓ Übernehmen', cls: 'primary', fn: () => {
-          const out = document.createElement('canvas'); const O = 160;
-          out.width = O; out.height = O;
-          draw(out.getContext('2d'), O / S, false);
-          URL.revokeObjectURL(url);
-          cb(out.toDataURL('image/jpeg', 0.82));
-        }
-      }
-    ]);
-  };
-  img.onerror = () => { URL.revokeObjectURL(url); toast('Dieses Bild kann nicht geöffnet werden.', 'err'); };
-  img.src = url;
+  $('#search').addEventListener('input', renderGrid);
+  $$('#pick-random [data-n]').forEach(b => b.addEventListener('click', () => {
+    const N = +b.dataset.n;
+    selectedIds = new Set(shuffle(profiles.slice()).slice(0, N).map(p => p.id));
+    saveSelection(); renderGrid();
+    toast(`${Math.min(N, profiles.length)} Accounts zufällig gewählt.`, 'ok');
+  }));
+  $('#clear-sel').addEventListener('click', () => { selectedIds.clear(); saveSelection(); renderGrid(); });
+  $('#go-game').addEventListener('click', () => showView('game'));
 }
 
 /* ---------------- Turnier ---------------- */
@@ -463,7 +179,7 @@ function newGame() {
   selected = null;
   saveGame();
 }
-function signature() { return selectedProfiles().map(p => `${p.id}:${p.followers}:${p.posts}:${p.handle}:${p.platform}:${p.img ? p.img.length : 0}`).join('|'); }
+function signature() { return selectedProfiles().map(p => `${p.id}:${p.followers}:${p.posts}`).join('|'); }
 function saveGame() { if (game) store(STORE_GAME, game); }
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
@@ -802,7 +518,7 @@ function relayout() {
       el = document.createElement('div');
       el.className = 'card';
       el.dataset.id = c.id; el.dataset.sig = sig;
-      el.innerHTML = `<span class="plat ${c.platform}">${platLabel(c.platform)}</span>${avatarHTML(c)}<div class="h">@${esc(c.handle)}</div><div class="f">${fmtCount(val(c))}<small>${crit().label}</small></div>`;
+      el.innerHTML = `${avatarHTML(c)}<div class="h">@${esc(c.handle)}</div><div class="f">${fmtCount(val(c))}<small>${crit().label}</small></div>`;
       el.style.transition = 'none';
       wrap.appendChild(el); cardEls.set(c.id, el);
       requestAnimationFrame(() => { el.style.transition = ''; });
@@ -831,10 +547,10 @@ function updateGameUI() {
   $('#toolbar-setup').hidden = !setup;
   $('#toolbar-play').hidden = setup;
   $('#btn-start').disabled = game.bench.some(Boolean);
-  $$('#crit .btn').forEach(b => b.classList.toggle('on', b.dataset.crit === (game.crit || 'followers')));
-  $$('#dir .btn').forEach(b => b.classList.toggle('on', b.dataset.dir === (game.dir || 'desc')));
-  $('#st-comp').textContent = `Vergleiche: ${game.comparisons}`;
-  $('#st-err').textContent = `Fehler: ${game.mistakes}`;
+  $$('#crit button').forEach(b => b.classList.toggle('on', b.dataset.crit === (game.crit || 'followers')));
+  $$('#dir button').forEach(b => b.classList.toggle('on', b.dataset.dir === (game.dir || 'desc')));
+  $('#st-comp').textContent = game.comparisons;
+  $('#st-err').textContent = game.mistakes;
   $('#btn-hint').disabled = $('#btn-step').disabled = game.phase !== 'play';
   $('#btn-undo').disabled = !game.hist.length;
   let text;
@@ -931,11 +647,12 @@ function onTapCard(id) {
 function showView(name) {
   $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === name));
   $$('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
+  document.body.classList.toggle('on-profiles', name === 'profiles');
   if (name !== 'game') stopAuto();
   if (name === 'game') {
     if (selectedProfiles().length < 2) {
       showView('profiles');
-      return toast('Wähle zuerst mindestens 2 Profile für das Turnier aus.', 'err');
+      return toast('Wähle zuerst mindestens 2 Accounts für das Turnier aus.', 'err');
     }
     if (!game || !game.leaves || game.sig !== signature()) newGame();
     fitBoard();
@@ -981,18 +698,16 @@ function confirmModal(title, text, okLabel, fn) {
 /* ---------------- Start ---------------- */
 function init() {
   $$('.tab').forEach(t => t.addEventListener('click', () => showView(t.dataset.view)));
+  document.body.classList.add('on-profiles');
   initProfileView();
   initBoard();
   $('#btn-shuffle').addEventListener('click', shuffleOntoLeaves);
-  $$('#crit .btn').forEach(b => b.addEventListener('click', () => {
+  $$('#crit button').forEach(b => b.addEventListener('click', () => {
     const c = b.dataset.crit;
     if (game.phase !== 'setup') return;
-    if (c === 'posts' && Object.values(game.cards).some(x => x.posts == null)) {
-      return toast('Nicht bei allen Karten ist die Anzahl Beiträge bekannt. Ergänze sie unter «1. Profile».', 'err', 4000);
-    }
     game.crit = c; saveGame(); relayout();
   }));
-  $$('#dir .btn').forEach(b => b.addEventListener('click', () => {
+  $$('#dir button').forEach(b => b.addEventListener('click', () => {
     if (game.phase !== 'setup') return;
     game.dir = b.dataset.dir; saveGame(); updateGameUI();
   }));
@@ -1009,7 +724,6 @@ function init() {
     clearTimeout(rt);
     rt = setTimeout(() => { if ($('#view-game').classList.contains('active')) { fitBoard(); relayout(); } }, 120);
   });
-  importFromHash();
-  window.addEventListener('hashchange', importFromHash);
+  loadAccounts();
 }
 init();
