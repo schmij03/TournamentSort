@@ -110,6 +110,9 @@ def fetch_tiktok(handle):
         raise ValueError("keine Profildaten im HTML")
     info = json.loads(m.group(1))["__DEFAULT_SCOPE__"]["webapp.user-detail"]["userInfo"]
     user, stats = info["user"], info.get("statsV2") or info["stats"]
+    # Nur verifizierte Konten (blauer Haken), damit keine Fake-Accounts in die Liste kommen
+    if not user.get("verified"):
+        raise ValueError("Konto ist nicht verifiziert")
     return {
         "name": user.get("nickname") or "",
         "followers": int(stats["followerCount"]),
