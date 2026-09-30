@@ -137,14 +137,10 @@
         <button data-dir="asc">⬆ Kleinste zuerst</button>
       </div>
     </div>
-    <label class="switch">
-      <input type="checkbox" id="ins-hidden" checked>
-      <span class="switch-track"><span class="switch-thumb"></span></span>
-      <span>Sortierte Karten verdeckt<br><small class="muted">Zum Vergleichen antippen</small></span>
-    </label>
   </div>
   <div class="toolbar">
     <button class="btn primary" id="ins-draw">🂠 Nächste Karte aufdecken</button>
+    <button class="btn" id="ins-undo">↶ Rückgängig</button>
     <button class="btn" id="ins-hint">💡 Tipp</button>
     <button class="btn" id="ins-log">📋 Protokoll</button>
     <button class="btn ghost" id="ins-reset">🔄 Neu starten</button>
@@ -156,8 +152,8 @@
         <div id="ins-pile" class="pile" role="button" aria-label="Nächste Karte aufdecken"></div>
       </section>
       <section class="ins-zone">
-        <h3>Neue Karte</h3>
-        <div id="ins-current" class="current-slot"></div>
+        <h3>Vergleich</h3>
+        <div id="ins-compare" class="compare-slot"></div>
       </section>
     </div>
     <section class="ins-zone">
@@ -188,9 +184,9 @@
     <h2>Und danach: Insertionsort</h2>
     <p>Nach dem Turnier kannst du dieselben Accounts mit dem <strong>Insertionsort</strong> (Sortieren durch Einfügen) sortieren:</p>
     <ol>
-      <li>Alle Karten liegen <strong>verdeckt</strong> auf dem Stapel. Decke die oberste Karte auf.</li>
-      <li>Vergleiche sie mit den Karten der <strong>sortierten Reihe</strong>. Diese sind verdeckt: Tippe eine Karte an, um sie aufzudecken. Jedes Aufdecken ist ein Vergleich. Beginne rechts.</li>
-      <li>Tippe auf die Lücke <strong>«+»</strong>, in die die neue Karte gehört. Dann kommt die nächste Karte vom Stapel.</li>
+      <li>Alle Karten liegen <strong>verdeckt</strong> auf dem Stapel. Decke die oberste Karte auf. Sie wird <strong>rechts</strong> an die sortierte Reihe angelegt.</li>
+      <li>Vergleiche sie mit der Karte <strong>links daneben</strong>: Muss sie davor stehen, tippe «⬅ Nach links rutschen». Sonst tippe «✓ Bleibt hier».</li>
+      <li>Nach dem Rutschen vergleichst du wieder mit der neuen linken Nachbarin, bis die Karte bleibt oder ganz links ist. Jede Entscheidung ist ein Vergleich.</li>
     </ol>
     <p>Am Schluss siehst du, wie viele Vergleiche der Tournamentsort und der Insertionsort gebraucht haben.</p>
     <h3>Bedienung am iPad</h3>
