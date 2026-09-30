@@ -1,0 +1,70 @@
+# Accounts, die die GitHub Action automatisch aktualisiert (jeden Montag).
+# Format: plattform handle [follower beiträge]   (plattform = tiktok oder instagram)
+# Follower und Beiträge sind freiwillig. Sie werden verwendet, wenn der automatische Abruf nicht klappt.
+# Ein eigenes Profilbild kann als img/accounts/<plattform>_<handle>.jpg hochgeladen werden.
+# Instagram blockiert den automatischen Abruf zurzeit, deshalb TikTok.
+# Zeilen mit # werden ignoriert. Accounts, die nicht gefunden werden, erscheinen nicht auf der Seite.
+
+instagram sek.ds
+
+# Stars & Musik
+tiktok khaby.lame
+tiktok charlidamelio
+tiktok mrbeast
+tiktok bellapoarch
+tiktok addisonre
+tiktok zachking
+tiktok willsmith
+tiktok therock
+tiktok selenagomez
+tiktok kyliejenner
+tiktok billieeilish
+tiktok taylorswift
+tiktok arianagrande
+tiktok sabrinacarpenter
+tiktok livbedumb
+tiktok jasonderulo
+tiktok edsheeran
+tiktok justinbieber
+tiktok iamcardib
+tiktok snoopdogg
+tiktok gordonramsayofficial
+tiktok lorengray
+tiktok domelipa
+tiktok dixiedamelio
+tiktok noahbeck
+tiktok brentrivera
+tiktok jamescharles
+tiktok avani
+tiktok babyariel
+tiktok kimberly.loaiza
+tiktok spencerx
+tiktok bayashi.tiktok
+tiktok cznburak
+tiktok bp_tiktok
+tiktok bts_official_bighit
+tiktok ishowspeed
+
+# Sport
+tiktok realmadrid
+tiktok fcbarcelona
+tiktok psg
+tiktok championsleague
+tiktok nba
+tiktok espn
+tiktok dudeperfect
+
+# Marken & Medien
+tiktok tiktok
+tiktok netflix
+tiktok nike
+tiktok disney
+tiktok tagesschau
+
+# Deutschsprachig
+tiktok twenty4tim
+tiktok julienbam
+tiktok dagibee
+tiktok montanablack
+tiktok papaplatte
+tiktok shirindavid
