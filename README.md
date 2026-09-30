@@ -15,6 +15,10 @@ Schritt für Schritt nach dem Tournamentsort-Algorithmus (mehr Follower gewinnt)
   Karten per Ziehen oder Antippen bewegen, falsche Züge werden erklärt und gezählt.
   Die Karte zuoberst wird automatisch in die Rangliste eingeordnet.
   Tipp, Schritt zeigen, automatischer Ablauf, Rückgängig und Protokoll aller Zweikämpfe.
+- **Insertionsort:** Nach dem Turnier lassen sich dieselben Accounts mit dem Insertionsort sortieren.
+  Die Karten liegen verdeckt auf einem Stapel und werden eine nach der anderen aufgedeckt und in die sortierte Reihe eingefügt.
+  Die Karten der Reihe sind verdeckt; jedes Aufdecken zum Vergleichen zählt als Vergleich.
+  Am Schluss werden die Vergleiche beider Verfahren gegenübergestellt.
 - Alles läuft im Browser, ohne Login. Die Auswahl bleibt auf dem Gerät gespeichert.
 
 ## Veröffentlichen mit GitHub Pages
