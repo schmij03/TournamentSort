@@ -391,3 +391,29 @@ body:not(.on-profiles) .toast { bottom: calc(20px + env(safe-area-inset-bottom))
 .compare b { font-size: 2rem; font-weight: 900; line-height: 1.1; }
 .compare span { color: var(--muted); font-weight: 700; font-size: .85rem; }
 @media (max-width: 700px) { .tab .step { display: none; } .tab { padding: 8px 10px; } }
+
+/* Insertionsort: Vergleich mit der linken Nachbarin */
+.compare-slot { min-height: calc(124px * 1.33); display: flex; flex-direction: column; justify-content: center; }
+.duel { display: flex; align-items: flex-end; gap: 14px; }
+.duel-card { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.duel-card small { font-size: 11px; font-weight: 900; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.vs {
+  align-self: center; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  background: linear-gradient(135deg, #ffe08a, var(--orange)); color: #fff; font-weight: 900; font-size: 1.3rem;
+  box-shadow: 0 4px 12px rgba(255,159,28,.35); margin-bottom: 40px;
+}
+.duel-q { margin: 12px 0 8px; font-weight: 700; }
+.duel-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.big-btn { min-height: 54px; padding: 12px 20px; font-size: 1.05rem; border-radius: 14px; }
+.big-btn.shake { animation: shake .45s; border-color: var(--danger); }
+.big-btn.hint { animation: pulse 0.9s ease-in-out 3; }
+
+.ins-row { gap: 10px; }
+.ins-row .icard.moving .front { border-color: var(--orange); box-shadow: 0 0 0 4px rgba(255,159,28,.35), 0 10px 20px rgba(0,0,0,.18); }
+.ins-row .icard.moving { transform: translateY(-8px); }
+.ins-row .icard.cmp .front { border-color: #f7c46a; border-style: dashed; }
+.icard.slide-left { animation: slideLeft .35s ease-out; }
+.icard.slide-in { animation: slideIn .4s ease-out; }
+@keyframes slideLeft { from { translate: 106px 0; } to { translate: 0 0; } }
+@keyframes slideIn { from { translate: 0 -60px; opacity: 0; } to { translate: 0 0; opacity: 1; } }
+@media (max-width: 700px) { .duel .icard.big { --cw: 104px; } }
