@@ -409,11 +409,11 @@ function showResult() {
     <ol class="ranklist">${rows}</ol>
     <p><strong>Vergleiche (Zweikämpfe):</strong> ${game.comparisons}<br>
        <strong>Fehler:</strong> ${game.mistakes} &nbsp; <strong>Tipps:</strong> ${game.hints}</p>
-    <p class="muted">Überlege: Wie viele Vergleiche hättest du mit dem Insertionsort gebraucht?</p>`;
+    <p class="muted">Überlege: Wie viele Vergleiche brauchst du mit dem Insertionsort? Probiere es gleich mit denselben Accounts aus.</p>`;
   openModal([
     { label: '📋 Protokoll', cls: 'ghost', fn: () => setTimeout(showLog, 50) },
     { label: '🔄 Nochmal', cls: 'ghost', fn: () => { newGame(); relayout(); } },
-    { label: 'OK', cls: 'primary' }
+    { label: '🃏 Weiter mit Insertionsort', cls: 'primary', fn: startInsertionFromGame }
   ]);
 }
 
@@ -643,6 +643,252 @@ function onTapCard(id) {
   toast(`@${c.handle}: ${fmtCount(c.followers)} Follower` + (c.posts != null ? `, ${fmtCount(c.posts)} Beiträge` : ''), '', 2200);
 }
 
+/* ---------------- Insertionsort ---------------- */
+/*
+  Alle Karten liegen verdeckt auf dem Stapel. Eine Karte nach der anderen wird aufgedeckt
+  und in die sortierte Reihe eingefügt. Die Karten der Reihe sind verdeckt: Wer vergleichen will,
+  tippt eine Karte an (jedes Aufdecken zählt als ein Vergleich) und wählt danach die passende Lücke.
+*/
+const STORE_INS = 'tsort_insertion_v1';
+let ins = load(STORE_INS, null);
+let insJustOpened = new Set();
+
+function saveIns() { if (ins) store(STORE_INS, ins); }
+
+function newIns(crit, dir) {
+  const sel = selectedProfiles();
+  const cards = {};
+  for (const p of sel) cards[p.id] = { id: p.id, platform: p.platform, handle: p.handle, name: p.name, followers: p.followers, posts: p.posts ?? 0, img: p.img };
+  ins = {
+    sig: signature(),
+    crit: crit || (ins && ins.crit) || (game && game.crit) || 'followers',
+    dir: dir || (ins && ins.dir) || (game && game.dir) || 'desc',
+    hidden: ins ? ins.hidden !== false : true,
+    cards,
+    pile: shuffle(sel.map(p => p.id)),
+    sorted: [], current: null, revealed: [],
+    comparisons: 0, mistakes: 0, hints: 0, log: [], done: false
+  };
+  insJustOpened = new Set();
+  saveIns();
+}
+
+const icard = id => ins.cards[id];
+const icrit = () => CRIT[ins.crit];
+const ival = c => c[ins.crit] ?? 0;
+const iwho = c => `@${c.handle} (${fmtCount(ival(c))} ${icrit().label})`;
+// Darf a vor (links von) b stehen? Gleichstand (auch gleich angezeigte Zahlen) zählt in beide Richtungen.
+function iBefore(a, b) {
+  if (fmtCount(ival(a)) === fmtCount(ival(b))) return true;
+  return ins.dir === 'asc' ? ival(a) < ival(b) : ival(a) > ival(b);
+}
+// Richtige Lücke für die aktuelle Karte (von rechts gesucht, wie beim Insertionsort)
+function correctGap() {
+  const cur = icard(ins.current);
+  let i = ins.sorted.length;
+  while (i > 0 && !iBefore(icard(ins.sorted[i - 1]), cur)) i--;
+  return i;
+}
+const started = () => ins.sorted.length > 0 || ins.current !== null;
+
+function icardHTML(c, open, cls = '') {
+  return `<div class="icard${open ? ' open' : ''} ${cls}" data-id="${esc(c.id)}">
+    <div class="inner">
+      <div class="face back"><span>?</span></div>
+      <div class="face front">${avatarHTML(c)}<div class="h">@${esc(c.handle)}</div><div class="f">${fmtCount(ival(c))}<small>${icrit().label}</small></div></div>
+    </div></div>`;
+}
+
+function renderIns() {
+  if (!ins) return;
+  const setup = !started() && !ins.done;
+  $('#ins-setup').hidden = !setup;
+  $$('#ins-crit button').forEach(b => b.classList.toggle('on', b.dataset.crit === ins.crit));
+  $$('#ins-dir button').forEach(b => b.classList.toggle('on', b.dataset.dir === ins.dir));
+  $('#ins-hidden').checked = ins.hidden;
+  $('#ins-comp').textContent = ins.comparisons;
+  $('#ins-err').textContent = ins.mistakes;
+  $('#ins-draw').disabled = ins.done || ins.current !== null || !ins.pile.length;
+  $('#ins-hint').disabled = ins.done;
+
+  // Stapel
+  const n = ins.pile.length;
+  $('#ins-pile-count').textContent = n ? `${n} Karte${n === 1 ? '' : 'n'}` : 'leer';
+  $('#ins-pile').innerHTML = n
+    ? Array.from({ length: Math.min(n, 6) }, (_, k) => `<div class="icard pile-card" style="--k:${k}"><div class="inner"><div class="face back"><span>?</span></div></div></div>`).join('')
+    : '<div class="empty-note">Alle Karten sind aufgedeckt.</div>';
+  $('#ins-pile').classList.toggle('can-draw', !$('#ins-draw').disabled);
+
+  // Neue Karte
+  $('#ins-current').innerHTML = ins.current
+    ? icardHTML(icard(ins.current), !insJustOpened.has(ins.current), 'big')
+    : '<div class="empty-note">Tippe auf den Stapel, um die nächste Karte aufzudecken.</div>';
+
+  // Sortierte Reihe mit Lücken
+  const active = ins.current !== null;
+  let html = '';
+  for (let i = 0; i <= ins.sorted.length; i++) {
+    html += `<button type="button" class="gap${active ? ' active' : ''}" data-i="${i}" aria-label="Hier einfügen">+</button>`;
+    if (i < ins.sorted.length) {
+      const id = ins.sorted[i];
+      const open = !ins.hidden || ins.done || (ins.revealed.includes(id) && !insJustOpened.has(id));
+      html += icardHTML(icard(id), open, ins.revealed.includes(id) ? 'cmp' : '');
+    }
+  }
+  $('#ins-row').innerHTML = html;
+  $('#ins-row-ends').innerHTML = ins.sorted.length
+    ? `<span>⬅ ${ins.dir === 'asc' ? 'kleinste' : 'grösste'}</span><span>${ins.dir === 'asc' ? 'grösste' : 'kleinste'} ➡</span>`
+    : '';
+
+  // Karten, die gerade aufgedeckt wurden, drehen sich um
+  if (insJustOpened.size) {
+    const ids = [...insJustOpened]; insJustOpened = new Set();
+    requestAnimationFrame(() => requestAnimationFrame(() => ids.forEach(id => $$(`.icard[data-id="${CSS.escape(id)}"]`).forEach(el => el.classList.add('open')))));
+  }
+
+  // Anleitung
+  let text;
+  if (ins.done) text = '🏆 Fertig! Alle Karten sind in der sortierten Reihe.';
+  else if (!ins.current) text = ins.sorted.length ? 'Decke die nächste Karte vom Stapel auf.' : 'Stelle ein, wonach sortiert wird, und decke dann die erste Karte vom Stapel auf.';
+  else if (!ins.sorted.length) text = 'Die erste Karte kommt einfach in die sortierte Reihe: Tippe auf die Lücke «+».';
+  else if (ins.hidden) text = 'Vergleiche: Tippe Karten in der Reihe an, um sie aufzudecken (am besten von rechts her). Tippe dann auf die Lücke «+», in die die neue Karte gehört.';
+  else text = 'Tippe auf die Lücke «+», in die die neue Karte gehört.';
+  $('#ins-instruction').textContent = text;
+}
+
+function insDraw() {
+  if (ins.done) return;
+  if (ins.current) return toast('Füge zuerst die aufgedeckte Karte in die Reihe ein.', 'err');
+  if (!ins.pile.length) return;
+  ins.current = ins.pile.shift();
+  ins.revealed = [];
+  insJustOpened.add(ins.current);
+  ins.log.push(`🂠 Neue Karte: ${iwho(icard(ins.current))}`);
+  saveIns(); renderIns();
+}
+
+function insReveal(id) {
+  if (ins.done || !ins.hidden) return;
+  if (!ins.current) return toast('Decke zuerst eine neue Karte vom Stapel auf.', 'err');
+  if (ins.revealed.includes(id)) return;
+  ins.revealed.push(id);
+  ins.comparisons++;
+  insJustOpened.add(id);
+  ins.log.push(`🔍 Vergleich: ${iwho(icard(ins.current))} mit ${iwho(icard(id))}`);
+  saveIns(); renderIns();
+}
+
+function insInsert(i) {
+  if (ins.done) return;
+  if (!ins.current) return toast('Decke zuerst eine neue Karte vom Stapel auf.', 'err');
+  const cur = icard(ins.current);
+  const left = ins.sorted[i - 1], right = ins.sorted[i];
+  if (ins.hidden) {
+    const missing = [left, right].filter(id => id && !ins.revealed.includes(id));
+    if (missing.length) {
+      pulseEls(missing.map(id => `#ins-row .icard[data-id="${CSS.escape(id)}"]`));
+      return toast('Vergleiche zuerst: Decke die Karte links und rechts von dieser Lücke auf, indem du sie antippst.', 'err', 4000);
+    }
+  }
+  const wrongLeft = left && !iBefore(icard(left), cur);
+  const wrongRight = right && !iBefore(cur, icard(right));
+  if (wrongLeft || wrongRight) {
+    ins.mistakes++;
+    const other = icard(wrongLeft ? left : right);
+    const side = wrongLeft ? 'links' : 'rechts';
+    const more = (ins.dir === 'asc') === !wrongLeft;
+    toast(`Falsche Lücke: ${iwho(cur)} hat ${more ? icrit().moreN : icrit().lessN} als ${iwho(other)} und darf nicht ${side === 'links' ? 'rechts' : 'links'} davon stehen.`, 'err', 4500);
+    saveIns(); renderIns();
+    const g = $(`#ins-row .gap[data-i="${i}"]`); if (g) { g.classList.add('shake'); }
+    return;
+  }
+  if (!ins.hidden && ins.sorted.length) ins.comparisons += (ins.sorted.length - i) + (i > 0 ? 1 : 0);
+  ins.sorted.splice(i, 0, ins.current);
+  ins.log.push(`➕ ${iwho(cur)} kommt auf Platz ${i + 1} der Reihe.`);
+  ins.current = null; ins.revealed = [];
+  if (!ins.pile.length) ins.done = true;
+  saveIns(); renderIns();
+  if (ins.done) setTimeout(showInsResult, 600);
+}
+
+function pulseEls(selectors) {
+  selectors.forEach(s => { const el = $(s); if (el) { el.classList.remove('hint'); void el.offsetWidth; el.classList.add('hint'); } });
+}
+
+function insHint() {
+  if (ins.done) return;
+  ins.hints++; saveIns();
+  if (!ins.current) { pulseEls(['#ins-pile']); return toast('Tipp: Decke die nächste Karte vom Stapel auf.'); }
+  const p = correctGap();
+  if (ins.hidden) {
+    // Von rechts her vergleichen, bis die Lücke feststeht
+    for (let j = ins.sorted.length - 1; j >= Math.max(0, p - 1); j--) {
+      const id = ins.sorted[j];
+      if (!ins.revealed.includes(id)) {
+        pulseEls([`#ins-row .icard[data-id="${CSS.escape(id)}"]`]);
+        return toast('Tipp: Vergleiche mit dieser Karte (antippen). Beim Insertionsort vergleicht man von rechts nach links.', '', 3500);
+      }
+    }
+  }
+  pulseEls([`#ins-row .gap[data-i="${p}"]`]);
+  toast('Tipp: In diese Lücke gehört die neue Karte.', '', 3000);
+}
+
+function insLog() {
+  const items = ins.log.length ? ins.log.map(l => `<li>${esc(l)}</li>`).join('') : '<li>Noch keine Schritte.</li>';
+  $('#modal-body').innerHTML = `<h2>📋 Protokoll Insertionsort</h2>
+    <p class="muted">Vergleiche: ${ins.comparisons} · Fehler: ${ins.mistakes} · Tipps: ${ins.hints}</p>
+    <ul class="log">${items}</ul>`;
+  openModal([{ label: 'Schliessen', cls: 'primary' }]);
+  const box = $('.modal-box'); box.scrollTop = box.scrollHeight;
+}
+
+function showInsResult() {
+  const rows = ins.sorted.map(id => `<li>${esc(iwho(icard(id)))}</li>`).join('');
+  const sameTournament = game && game.phase === 'done' && game.sig === ins.sig && game.crit === ins.crit && game.dir === ins.dir;
+  const compare = sameTournament
+    ? `<div class="compare">
+        <div><small>Tournamentsort</small><b>${game.comparisons}</b><span>Vergleiche</span></div>
+        <div><small>Insertionsort</small><b>${ins.comparisons}</b><span>Vergleiche</span></div>
+      </div>
+      <p class="muted">Welches Verfahren brauchte weniger Vergleiche? Woran liegt das?</p>`
+    : `<p><strong>Vergleiche:</strong> ${ins.comparisons}</p>
+      <p class="muted">Tipp: Spiele mit denselben Accounts und derselben Einstellung auch das Turnier, dann siehst du hier den Vergleich.</p>`;
+  $('#modal-body').innerHTML = `
+    <h2>🃏 Geschafft!</h2>
+    <p>Alle ${ins.sorted.length} Karten sind mit dem Insertionsort sortiert.</p>
+    <ol class="ranklist">${rows}</ol>
+    ${compare}
+    <p><strong>Fehler:</strong> ${ins.mistakes} &nbsp; <strong>Tipps:</strong> ${ins.hints}</p>`;
+  openModal([
+    { label: '📋 Protokoll', cls: 'ghost', fn: () => setTimeout(insLog, 50) },
+    { label: '🔄 Nochmal', cls: 'ghost', fn: () => { newIns(ins.crit, ins.dir); renderIns(); } },
+    { label: 'OK', cls: 'primary' }
+  ]);
+}
+
+function startInsertionFromGame() {
+  newIns(game.crit, game.dir);
+  showView('insert');
+}
+
+function initInsertion() {
+  $('#ins-draw').addEventListener('click', insDraw);
+  $('#ins-pile').addEventListener('click', insDraw);
+  $('#ins-hint').addEventListener('click', insHint);
+  $('#ins-log').addEventListener('click', insLog);
+  $('#ins-reset').addEventListener('click', () => confirmModal('Neu starten?', 'Alle Karten werden gemischt und kommen verdeckt auf den Stapel.', 'Neu starten', () => { newIns(ins.crit, ins.dir); renderIns(); }));
+  $('#ins-row').addEventListener('click', e => {
+    const gap = e.target.closest('.gap');
+    if (gap) return insInsert(+gap.dataset.i);
+    const c = e.target.closest('.icard');
+    if (c) insReveal(c.dataset.id);
+  });
+  $$('#ins-crit button').forEach(b => b.addEventListener('click', () => { if (started()) return; ins.crit = b.dataset.crit; saveIns(); renderIns(); }));
+  $$('#ins-dir button').forEach(b => b.addEventListener('click', () => { if (started()) return; ins.dir = b.dataset.dir; saveIns(); renderIns(); }));
+  $('#ins-hidden').addEventListener('change', e => { if (started()) return; ins.hidden = e.target.checked; saveIns(); renderIns(); });
+}
+
 /* ---------------- Views, Toast, Modal ---------------- */
 function showView(name) {
   $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === name));
@@ -657,6 +903,14 @@ function showView(name) {
     if (!game || !game.leaves || game.sig !== signature()) newGame();
     fitBoard();
     relayout();
+  }
+  if (name === 'insert') {
+    if (selectedProfiles().length < 2) {
+      showView('profiles');
+      return toast('Wähle zuerst mindestens 2 Accounts aus.', 'err');
+    }
+    if (!ins || ins.sig !== signature()) newIns();
+    renderIns();
   }
   window.scrollTo(0, 0);
 }
@@ -701,6 +955,7 @@ function init() {
   document.body.classList.add('on-profiles');
   initProfileView();
   initBoard();
+  initInsertion();
   $('#btn-shuffle').addEventListener('click', shuffleOntoLeaves);
   $$('#crit button').forEach(b => b.addEventListener('click', () => {
     const c = b.dataset.crit;

@@ -26,6 +26,7 @@
   <nav class="tabs" role="tablist">
     <button class="tab active" data-view="profiles" role="tab"><span class="step">1</span> Accounts</button>
     <button class="tab" data-view="game" role="tab"><span class="step">2</span> Turnier</button>
+    <button class="tab" data-view="insert" role="tab"><span class="step">3</span> Insertionsort</button>
     <button class="tab icon" data-view="help" role="tab" aria-label="Hilfe">?</button>
   </nav>
 </header>
@@ -112,6 +113,61 @@
   </div>
 </main>
 
+<!-- ============ INSERTIONSORT ============ -->
+<main id="view-insert" class="view">
+  <div class="gamebar">
+    <p id="ins-instruction" class="instruction"></p>
+    <div class="stats">
+      <span class="stat"><small>Vergleiche</small><b id="ins-comp">0</b></span>
+      <span class="stat err"><small>Fehler</small><b id="ins-err">0</b></span>
+    </div>
+  </div>
+  <div class="toolbar" id="ins-setup">
+    <div class="seg-group" id="ins-crit" role="radiogroup" aria-label="Sortieren nach">
+      <span class="seg-label">Sortieren nach</span>
+      <div class="segmented">
+        <button data-crit="followers">👥 Follower</button>
+        <button data-crit="posts">🎬 Beiträge</button>
+      </div>
+    </div>
+    <div class="seg-group" id="ins-dir" role="radiogroup" aria-label="Reihenfolge">
+      <span class="seg-label">Reihenfolge</span>
+      <div class="segmented">
+        <button data-dir="desc">⬇ Grösste zuerst</button>
+        <button data-dir="asc">⬆ Kleinste zuerst</button>
+      </div>
+    </div>
+    <label class="switch">
+      <input type="checkbox" id="ins-hidden" checked>
+      <span class="switch-track"><span class="switch-thumb"></span></span>
+      <span>Sortierte Karten verdeckt<br><small class="muted">Zum Vergleichen antippen</small></span>
+    </label>
+  </div>
+  <div class="toolbar">
+    <button class="btn primary" id="ins-draw">🂠 Nächste Karte aufdecken</button>
+    <button class="btn" id="ins-hint">💡 Tipp</button>
+    <button class="btn" id="ins-log">📋 Protokoll</button>
+    <button class="btn ghost" id="ins-reset">🔄 Neu starten</button>
+  </div>
+  <div class="ins-board">
+    <div class="ins-top">
+      <section class="ins-zone">
+        <h3>Stapel <span id="ins-pile-count" class="count-pill"></span></h3>
+        <div id="ins-pile" class="pile" role="button" aria-label="Nächste Karte aufdecken"></div>
+      </section>
+      <section class="ins-zone">
+        <h3>Neue Karte</h3>
+        <div id="ins-current" class="current-slot"></div>
+      </section>
+    </div>
+    <section class="ins-zone">
+      <h3>Sortierte Reihe</h3>
+      <div id="ins-row" class="ins-row"></div>
+      <div id="ins-row-ends" class="row-ends"></div>
+    </section>
+  </div>
+</main>
+
 <!-- ============ HILFE ============ -->
 <main id="view-help" class="view">
   <section class="panel prose">
@@ -129,6 +185,14 @@
       <li><strong>Kein Gegner:</strong> Ist neben einer Karte kein Gegner mehr da (und kommt auch keiner mehr nach), rückt sie ohne Zweikampf nach oben.</li>
       <li><strong>Rang:</strong> Ist eine Karte zuoberst im Feld «Rang», kommt sie automatisch auf den nächsten freien Platz der Rangliste.</li>
     </ol>
+    <h2>Und danach: Insertionsort</h2>
+    <p>Nach dem Turnier kannst du dieselben Accounts mit dem <strong>Insertionsort</strong> (Sortieren durch Einfügen) sortieren:</p>
+    <ol>
+      <li>Alle Karten liegen <strong>verdeckt</strong> auf dem Stapel. Decke die oberste Karte auf.</li>
+      <li>Vergleiche sie mit den Karten der <strong>sortierten Reihe</strong>. Diese sind verdeckt: Tippe eine Karte an, um sie aufzudecken. Jedes Aufdecken ist ein Vergleich. Beginne rechts.</li>
+      <li>Tippe auf die Lücke <strong>«+»</strong>, in die die neue Karte gehört. Dann kommt die nächste Karte vom Stapel.</li>
+    </ol>
+    <p>Am Schluss siehst du, wie viele Vergleiche der Tournamentsort und der Insertionsort gebraucht haben.</p>
     <h3>Bedienung am iPad</h3>
     <ul>
       <li>Karte mit dem Finger auf das Zielfeld <strong>ziehen</strong>, oder</li>
